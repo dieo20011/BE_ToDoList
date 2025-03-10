@@ -15,19 +15,35 @@ namespace ToDoList_FS.Controllers
             _mongoDBService = mongoDBService;
         }
 
-        [HttpGet("get")]
-        public async Task<IActionResult> GetTodoList()
+        [HttpGet("get/{id}")]
+        public async Task<IActionResult> GetTodoList(string id)
         {
-            var todos = await _mongoDBService.GetTodoList();
+            var todos = await _mongoDBService.GetTodoList(id);
             return SuccessResult(todos);
         }
 
 
         [HttpPost("add")]
-        public async Task<IActionResult> AddToDoList([FromBody] TodoItem todo)
+        public async Task<IActionResult> AddTask([FromBody] TodoItem todo)
         {
-            await _mongoDBService.AddTodoItem(todo);
-            return Ok(new { message = "OK" });
+            await _mongoDBService.AddTask(todo);
+            return SuccessResult("Thêm task thành công");
+        }
+
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> UpdateTask(string id, [FromBody] TodoItem todo)
+        {
+            await _mongoDBService.UpdateTask(id, todo);
+            return SuccessResult("Cập nhật task thành công");
+        }
+
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteTask(string id)
+        {
+            {
+                await _mongoDBService.DeleteTask(id);
+                return SuccessResult("Xóa task thành công");
+            }
         }
     }
 }
