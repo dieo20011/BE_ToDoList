@@ -58,7 +58,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("AllowLocalhost4200");
 
 // **Thêm Authentication trước Authorization**
