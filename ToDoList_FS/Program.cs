@@ -10,9 +10,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSingleton<IMongoClient>(s =>
 {
-    string connectionString = "mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority&appName=Todolist";
-    return new MongoClient(connectionString);
+    MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority&appName=Todolist"));
+    settings.SslSettings = new SslSettings { EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 };
+    return new MongoClient(settings);
 });
+
 builder.Services.AddScoped<MongoDBService>();
 
 // Allow CORS
@@ -58,6 +60,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseHttpsRedirection();
 app.UseCors("AllowLocalhost4200");
 
 // **Thêm Authentication trước Authorization**
@@ -66,8 +69,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-app.Urls.Add($"http://*:{port}");
+//var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+//app.Urls.Add($"http://*:{port}");
 
 app.Run();
 
