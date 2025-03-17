@@ -61,17 +61,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("AllowLocalhost4200");
 
 // **Thêm Authentication trước Authorization**
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-app.Urls.Add($"http://*:{port}");
-
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(int.Parse(port));
+});
+app.UseHttpsRedirection();
+app.MapControllers();
+app.UseAuthentication();
+app.UseAuthorization();
 app.Run();
 
