@@ -52,7 +52,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -70,6 +69,8 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(int.Parse(port));
 });
+var app = builder.Build();
+
 app.UseHttpsRedirection();
 app.MapControllers();
 app.UseAuthentication();
