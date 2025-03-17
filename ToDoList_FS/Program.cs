@@ -11,6 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<IMongoClient>(s =>
 {
     MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority&appName=Todolist"));
+    settings.ConnectTimeout = TimeSpan.FromSeconds(60);
     settings.SslSettings = new SslSettings { EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 };
     return new MongoClient(settings);
 });
@@ -69,8 +70,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-//var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-//app.Urls.Add($"http://*:{port}");
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Urls.Add($"http://*:{port}");
 
 app.Run();
 
