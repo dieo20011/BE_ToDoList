@@ -15,6 +15,8 @@ namespace ToDoList_FS.Model
         public string? FullName { get; set; }
         [BsonElement("password")]
         public string Password { get; set; }
+        [BsonElement("isAdmin")]
+        public bool IsAdmin { get; set; }
     }
 
     public class UserLoginRequest

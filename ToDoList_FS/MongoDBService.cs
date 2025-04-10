@@ -14,12 +14,14 @@ namespace ToDoList_FS
         private readonly IMongoCollection<TodoItem> _todoItems;
         private readonly IMongoCollection<User> _users;
         private readonly string _jwtSecret = "banhxeo0210_abc1234567890abcdef";  // 128 bits (16 bytes)
+        private readonly IMongoCollection<Holiday> _holidayCollection;
 
-        public MongoDBService(IMongoClient mongoClient)
+        public MongoDBService(IMongoClient mongoClient, IConfiguration configuration)
         {
             var database = mongoClient.GetDatabase("Todolist_Paging");
             _todoItems = database.GetCollection<TodoItem>("Paging");
             _users = database.GetCollection<User>("Users");
+            _holidayCollection = database.GetCollection<Holiday>("Holiday");
         }
         public async Task<User?> GetUserById(string UserId)
         {
@@ -142,6 +144,68 @@ namespace ToDoList_FS
         {
            var filter = Builders<TodoItem>.Filter.Eq(todo => todo.Id, id);
            await _todoItems.DeleteOneAsync(filter);
+        }
+
+        public async Task<List<Holiday>> GetHolidaysAsync(string userId)
+        {
+            var query = _holidayCollection.Find(x => x.UserId == userId);
+            var items = await query
+                .Sort(Builders<Holiday>.Sort.Descending(x => x.CreatedDate))
+                .ToListAsync();
+
+            return items;
+        }
+
+        public async Task CreateHolidayAsync(HolidayDTO holidayDto, string userId)
+        {
+            var currentDate = holidayDto.FromDate.Date;
+            var endDate = holidayDto.ToDate.Date;
+
+            while (currentDate <= endDate)
+            {
+                var holiday = new Holiday
+                {
+                    Name = holidayDto.Name,
+                    FromDate = currentDate,
+                    ToDate = currentDate,
+                    Description = holidayDto.Description,
+                    IsAnnualHoliday = holidayDto.IsAnnualHoliday,
+                    UserId = userId,
+                    CreatedDate = DateTime.UtcNow
+                };
+                
+                await _holidayCollection.InsertOneAsync(holiday);
+                currentDate = currentDate.AddDays(1);
+            }
+        }
+
+        public async Task<bool> UpdateHolidayAsync(string id, string userId, HolidayDTO holidayDto)
+        {
+            var update = Builders<Holiday>.Update
+                .Set(h => h.Name, holidayDto.Name)
+                .Set(h => h.FromDate, holidayDto.FromDate)
+                .Set(h => h.ToDate, holidayDto.ToDate)
+                .Set(h => h.Description, holidayDto.Description)
+                .Set(h => h.IsAnnualHoliday, holidayDto.IsAnnualHoliday)
+                .Set(h => h.UpdatedDate, DateTime.UtcNow);
+
+            var result = await _holidayCollection.UpdateOneAsync(
+                x => x.Id == id && x.UserId == userId,
+                update);
+
+            return result.ModifiedCount > 0;
+        }
+
+        public async Task<bool> DeleteHolidayAsync(string id, string userId)
+        {
+            var result = await _holidayCollection.DeleteOneAsync(x => x.Id == id && x.UserId == userId);
+            return result.DeletedCount > 0;
+        }
+
+        public async Task<Holiday?> GetHolidayByIdAsync(string id, string userId)
+        {
+            return await _holidayCollection.Find(x => x.Id == id && x.UserId == userId)
+                .FirstOrDefaultAsync();
         }
     }
 }
