@@ -34,5 +34,18 @@ public class HolidayDTO
     public string Description { get; set; } = null!;
     public bool IsAnnualHoliday { get; set; }
     public string UserId { get; set; } = null!;
+}
+
+public class HolidayQueryParams
+{
+    public int PageIndex { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+    public string? Keyword { get; set; }
+}
+
+public class HolidayPaginatedResult
+{
+    public List<Holiday> Items { get; set; } = new List<Holiday>();
+    public int TotalRecord { get; set; }
 } 
 }

@@ -15,10 +15,21 @@ namespace ToDoList_FS.Controllers
         }
 
         [HttpGet("get/{userId}")]
-        public async Task<IActionResult> GetHolidays(string userId)
+        public async Task<IActionResult> GetHolidays(
+            string userId,
+            [FromQuery] int pageIndex = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? keyword = null)
         {
-            var holidays = await _mongoDBService.GetHolidaysAsync(userId);
-            return SuccessResult(holidays);
+            var queryParams = new HolidayQueryParams
+            {
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                Keyword = keyword
+            };
+
+            var result = await _mongoDBService.GetHolidaysAsync(userId, queryParams);
+            return SuccessResult(result);
         }
 
         [HttpGet("detail/{userId}/{holidayId}")]

@@ -146,28 +146,72 @@ namespace ToDoList_FS
            await _todoItems.DeleteOneAsync(filter);
         }
 
-        public async Task<List<Holiday>> GetHolidaysAsync(string userId)
+        public async Task<HolidayPaginatedResult> GetHolidaysAsync(string userId, HolidayQueryParams queryParams)
         {
             var query = _holidayCollection.Find(x => x.UserId == userId);
+            
+            if (!string.IsNullOrEmpty(queryParams.Keyword))
+            {
+                var keyword = queryParams.Keyword.ToLower();
+                var filter = Builders<Holiday>.Filter.And(
+                    Builders<Holiday>.Filter.Eq(x => x.UserId, userId),
+                    Builders<Holiday>.Filter.Regex(
+                        x => x.Name,
+                        new MongoDB.Bson.BsonRegularExpression(keyword, "i")
+                    )
+                );
+                query = _holidayCollection.Find(filter);
+            }
+
+            // Đếm tổng số record
+            var totalRecord = await query.CountDocumentsAsync();
+            
+            // Lấy items theo trang
             var items = await query
                 .Sort(Builders<Holiday>.Sort.Descending(x => x.CreatedDate))
+                .Skip((queryParams.PageIndex - 1) * queryParams.PageSize)
+                .Limit(queryParams.PageSize)
                 .ToListAsync();
 
-            return items;
+            return new HolidayPaginatedResult
+            {
+                Items = items,
+                TotalRecord = (int)totalRecord
+            };
         }
 
         public async Task CreateHolidayAsync(HolidayDTO holidayDto, string userId)
         {
-            var currentDate = holidayDto.FromDate.Date;
-            var endDate = holidayDto.ToDate.Date;
+            // Nếu fromDate và toDate khác nhau, tách thành các ngày riêng biệt
+            if (holidayDto.FromDate.Date != holidayDto.ToDate.Date)
+            {
+                var currentDate = holidayDto.FromDate.Date;
+                var endDate = holidayDto.ToDate.Date;
 
-            while (currentDate <= endDate)
+                while (currentDate <= endDate)
+                {
+                    var holiday = new Holiday
+                    {
+                        Name = holidayDto.Name,
+                        FromDate = currentDate,
+                        ToDate = currentDate, // Mỗi item sẽ có fromDate = toDate
+                        Description = holidayDto.Description,
+                        IsAnnualHoliday = holidayDto.IsAnnualHoliday,
+                        UserId = userId,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                    
+                    await _holidayCollection.InsertOneAsync(holiday);
+                    currentDate = currentDate.AddDays(1);
+                }
+            }
+            else // Nếu fromDate = toDate, tạo một item duy nhất
             {
                 var holiday = new Holiday
                 {
                     Name = holidayDto.Name,
-                    FromDate = currentDate,
-                    ToDate = currentDate,
+                    FromDate = holidayDto.FromDate.Date,
+                    ToDate = holidayDto.FromDate.Date,
                     Description = holidayDto.Description,
                     IsAnnualHoliday = holidayDto.IsAnnualHoliday,
                     UserId = userId,
@@ -175,7 +219,6 @@ namespace ToDoList_FS
                 };
                 
                 await _holidayCollection.InsertOneAsync(holiday);
-                currentDate = currentDate.AddDays(1);
             }
         }
 
