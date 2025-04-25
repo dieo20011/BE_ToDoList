@@ -148,8 +148,13 @@ namespace ToDoList_FS
 
         public async Task<HolidayPaginatedResult> GetHolidaysAsync(string userId, HolidayQueryParams queryParams)
         {
+            // Get total record
+            var totalRecord = await _holidayCollection.CountDocumentsAsync(x => x.UserId == userId);
+
+            
             var query = _holidayCollection.Find(x => x.UserId == userId);
             
+            // Add search condition if keyword is not empty
             if (!string.IsNullOrEmpty(queryParams.Keyword))
             {
                 var keyword = queryParams.Keyword.ToLower();
@@ -162,9 +167,6 @@ namespace ToDoList_FS
                 );
                 query = _holidayCollection.Find(filter);
             }
-
-            // Đếm tổng số record
-            var totalRecord = await query.CountDocumentsAsync();
             
             // Lấy items theo trang
             var items = await query
@@ -176,7 +178,7 @@ namespace ToDoList_FS
             return new HolidayPaginatedResult
             {
                 Items = items,
-                TotalRecord = (int)totalRecord
+                TotalRecord = (int)totalRecord  // Trả về tổng số record không phụ thuộc search
             };
         }
 
@@ -249,6 +251,14 @@ namespace ToDoList_FS
         {
             return await _holidayCollection.Find(x => x.Id == id && x.UserId == userId)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Holiday>> GetAllHolidaysAsync(string userId)
+        {
+            return await _holidayCollection
+                .Find(x => x.UserId == userId)
+                .Sort(Builders<Holiday>.Sort.Descending(x => x.CreatedDate))
+                .ToListAsync();
         }
     }
 }

@@ -74,5 +74,12 @@ namespace ToDoList_FS.Controllers
 
             return SuccessResult("Xóa ngày nghỉ thành công");
         }
+
+        [HttpGet("all/{userId}")]
+        public async Task<IActionResult> GetAllHolidays(string userId)
+        {
+            var holidays = await _mongoDBService.GetAllHolidaysAsync(userId);
+            return SuccessResult(holidays);
+        }
     }
 } 
