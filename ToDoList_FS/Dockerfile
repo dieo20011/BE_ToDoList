@@ -5,10 +5,12 @@ WORKDIR /app
 USER root
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
-USER app
+# No need to switch to app user on Render - it can cause permission issues
+# USER app
 
-EXPOSE 5000
-EXPOSE 5001
+# We'll use PORT environment variable from Render
+EXPOSE 8080 
+EXPOSE 443
 
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -38,6 +40,7 @@ ENV DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 ENV MONGO_TLS=true
 ENV MONGO_SSL=true
-EXPOSE 5000
+ENV ASPNETCORE_URLS=http://+:8080
+
 # Start application
 ENTRYPOINT ["dotnet", "ToDoList_FS.dll"]

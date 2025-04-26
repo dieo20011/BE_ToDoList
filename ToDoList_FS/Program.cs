@@ -9,40 +9,59 @@ var builder = WebApplication.CreateBuilder(args);
 // **Cấu hình Kestrel trước khi build**
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.ListenAnyIP(5148); // HTTP
-    serverOptions.ListenAnyIP(7291, listenOptions =>
+    // Use port from environment variable (for Render) or fallback to defaults
+    var port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "5000");
+    serverOptions.ListenAnyIP(port); // HTTP for Render
+    
+    // Only configure HTTPS on development environment
+    if (builder.Environment.IsDevelopment())
     {
-        listenOptions.UseHttps(); // HTTPS
-    });
+        serverOptions.ListenAnyIP(7291, listenOptions =>
+        {
+            listenOptions.UseHttps(); // HTTPS
+        });
+    }
 });
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Get MongoDB connection string from environment or fallback to hardcoded value
+var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING") ?? 
+    "mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority&ssl=true";
+
 builder.Services.AddSingleton<IMongoClient>(s =>
 {
-    MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority&ssl=true\r\n"));
+    MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(mongoConnectionString));
     settings.SslSettings = new SslSettings { EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 };
     return new MongoClient(settings);
 });
 
 builder.Services.AddScoped<MongoDBService>();
 
-// Allow CORS
+// Allow CORS with a more flexible policy for production
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost4200",
+    options.AddPolicy("CorsPolicy",
        policy => policy
-           .WithOrigins("http://localhost:4200")
+           .WithOrigins(
+               "http://localhost:4200", 
+               "https://todolist-frontend.onrender.com", // Add your frontend URL on Render
+               "https://*.onrender.com" // Allow any Render subdomain
+           )
            .AllowAnyHeader()
-           .AllowAnyMethod());
+           .AllowAnyMethod()
+           .AllowCredentials());
 });
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// **THÊM AUTHENTICATION TRƯỚC `builder.Build()`**
-var key = Encoding.ASCII.GetBytes("banhxeo0210_abc1234567890abcdef");
+// Get JWT Secret from environment or fallback to hardcoded value
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "banhxeo0210_abc1234567890abcdef";
+var key = Encoding.ASCII.GetBytes(jwtSecret);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -55,7 +74,7 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key), // Sử dụng biến `key`
+        IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = false,
         ValidateAudience = false
     };
@@ -63,21 +82,29 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Always enable Swagger in all environments for this project
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseCors("AllowLocalhost4200");
+// Use the updated CORS policy
+app.UseCors("CorsPolicy");
 
-// **Thêm Authentication trước Authorization**
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseHttpsRedirection();
+// In production, Render handles HTTPS, so we don't need to redirect
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.MapControllers();
 
-// Thêm cấu hình URL
-app.Urls.Add("http://localhost:5148");
-// app.Urls.Add("https://localhost:7291"); // Bỏ comment nếu cần HTTPS
+// Only set explicit URLs in development
+if (app.Environment.IsDevelopment())
+{
+    app.Urls.Add("http://localhost:5148");
+    // app.Urls.Add("https://localhost:7291"); // Bỏ comment nếu cần HTTPS
+}
 
 app.Run();
