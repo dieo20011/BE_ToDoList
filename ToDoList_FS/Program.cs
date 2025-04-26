@@ -9,8 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 // **Cấu hình Kestrel trước khi build**
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    // Use port from environment variable (for Render) or fallback to defaults
-    var port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "5000");
+    // Use port from environment variable (for Render)
+    var port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080");
     serverOptions.ListenAnyIP(port); // HTTP for Render
     
     // Only configure HTTPS on development environment
@@ -44,11 +44,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy",
        policy => policy
-           .WithOrigins(
-               "http://localhost:4200", 
-               "https://todolist-frontend.onrender.com", // Add your frontend URL on Render
-               "https://*.onrender.com" // Allow any Render subdomain
-           )
+           .SetIsOriginAllowed(_ => true) // Allow any origin
            .AllowAnyHeader()
            .AllowAnyMethod()
            .AllowCredentials());

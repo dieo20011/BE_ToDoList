@@ -7,6 +7,8 @@ services:
     region: singapore # Choose appropriate region
     plan: free # You can change to paid plans as needed
     envVars:
+      - key: PORT
+        value: 8080
       - key: MONGO_CONNECTION_STRING
         value: mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority&ssl=true
       - key: MONGO_TLS
