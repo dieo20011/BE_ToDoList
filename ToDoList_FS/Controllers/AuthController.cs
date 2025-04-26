@@ -64,7 +64,7 @@ namespace ToDoList_FS.Controllers
         }
         //Login
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] User user)
+        public async Task<IActionResult> Login([FromBody] UserLoginRequest user)
         {
             var result = await _mongoDbSVC.Login(user.UserName, user.Password);
             if(result == "Invalid username or password")

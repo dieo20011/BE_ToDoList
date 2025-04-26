@@ -82,17 +82,17 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// Use the updated CORS policy
+// Use the updated CORS policy - moved to the very beginning of middleware pipeline
 app.UseCors("CorsPolicy");
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 // In production, Render handles HTTPS, so we don't need to redirect
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
