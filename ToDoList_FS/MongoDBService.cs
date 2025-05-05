@@ -120,9 +120,17 @@ namespace ToDoList_FS
             return originalKey;
         }
         //Task
-        public async Task<List<TodoItem>> GetTodoList(string UserId)
+        public async Task<List<TodoItem>> GetTodoList(string UserId, int status = 0)
         {
-            return await _todoItems.Find(todo => todo.UserId == UserId).ToListAsync();
+            // If status is 0 (All), return all tasks for the user
+            if (status == (int)Model.TaskStatus.All)
+            {
+                return await _todoItems.Find(todo => todo.UserId == UserId).ToListAsync();
+            }
+            
+            // Otherwise, filter by both userId and status
+            // Status: 1=Pending, 2=InProgress, 3=Done
+            return await _todoItems.Find(todo => todo.UserId == UserId && todo.Status == status).ToListAsync();
         }
 
         public async Task AddTask(TodoItem item)

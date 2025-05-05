@@ -16,9 +16,9 @@ namespace ToDoList_FS.Controllers
         }
 
         [HttpGet("get/{id}")]
-        public async Task<IActionResult> GetTodoList(string id)
+        public async Task<IActionResult> GetTodoList(string id, [FromQuery] int status = 0)
         {
-            var todos = await _mongoDBService.GetTodoList(id);
+            var todos = await _mongoDBService.GetTodoList(id, status);
             return SuccessResult(todos);
         }
 

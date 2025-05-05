@@ -3,6 +3,15 @@ using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
 namespace ToDoList_FS.Model
 {
+    // Enum for task status
+    public enum TaskStatus
+    {
+        All = 0,        // Used for filtering
+        Pending = 1,    // Task is pending
+        InProgress = 2, // Task is in progress
+        Done = 3        // Task is completed
+    }
+
     public class TodoItem
     {
         [BsonId]
