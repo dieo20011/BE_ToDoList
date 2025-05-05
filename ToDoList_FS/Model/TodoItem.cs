@@ -6,10 +6,10 @@ namespace ToDoList_FS.Model
     // Enum for task status
     public enum TaskStatus
     {
-        All = 0,        // Used for filtering
-        Pending = 1,    // Task is pending
-        InProgress = 2, // Task is in progress
-        Done = 3        // Task is completed
+        All = 3,        // Used for filtering
+        Pending = 0,    // Task is pending
+        InProgress = 1, // Task is in progress
+        Done = 2        // Task is completed
     }
 
     public class TodoItem

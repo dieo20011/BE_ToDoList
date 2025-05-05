@@ -24,7 +24,7 @@ namespace ToDoList_FS.Controllers
             // 1 = Pending
             // 2 = InProgress
             // 3 = Done
-            int statusValue = status ?? 0;
+            int statusValue = status ?? 3;
             var todos = await _mongoDBService.GetTodoList(id, statusValue);
             return SuccessResult(todos);
         }
@@ -69,13 +69,6 @@ namespace ToDoList_FS.Controllers
                 return NotFound("Task not found");
             }
             return SuccessResult(task);
-        }
-
-        [HttpPost("fix-statuses/{id}")]
-        public async Task<IActionResult> FixStatuses(string id)
-        {
-            await _mongoDBService.UpdateAllTaskStatuses(id);
-            return SuccessResult("Đã cập nhật status cho tất cả tasks");
         }
     }
 }
