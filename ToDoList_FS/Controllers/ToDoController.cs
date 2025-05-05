@@ -19,6 +19,11 @@ namespace ToDoList_FS.Controllers
         public async Task<IActionResult> GetTodoList(string id, [FromQuery] int? status)
         {
             // Use the provided status or default to 0 (All) if not provided
+            // Status values:
+            // 0 = All (no filter)
+            // 1 = Pending
+            // 2 = InProgress
+            // 3 = Done
             int statusValue = status ?? 0;
             var todos = await _mongoDBService.GetTodoList(id, statusValue);
             return SuccessResult(todos);
@@ -55,19 +60,6 @@ namespace ToDoList_FS.Controllers
             return SuccessResult("Xóa task thành công");
         }
 
-        [HttpGet("debug/{id}")]
-        public async Task<IActionResult> DebugTasks(string id)
-        {
-            var tasks = await _mongoDBService.GetTodoList(id);
-            var debug = tasks.Select(t => new { 
-                Id = t.Id, 
-                Title = t.Title, 
-                Status = t.Status, 
-                StatusType = t.Status.GetType().Name
-            }).ToList();
-            return SuccessResult(debug);
-        }
-
         [HttpGet("task/{id}")]
         public async Task<IActionResult> GetTaskById(string id)
         {
@@ -77,6 +69,13 @@ namespace ToDoList_FS.Controllers
                 return NotFound("Task not found");
             }
             return SuccessResult(task);
+        }
+
+        [HttpPost("fix-statuses/{id}")]
+        public async Task<IActionResult> FixStatuses(string id)
+        {
+            await _mongoDBService.UpdateAllTaskStatuses(id);
+            return SuccessResult("Đã cập nhật status cho tất cả tasks");
         }
     }
 }
