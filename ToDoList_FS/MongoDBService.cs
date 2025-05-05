@@ -130,11 +130,17 @@ namespace ToDoList_FS
             
             // Otherwise, filter by both userId and status
             // Status: 1=Pending, 2=InProgress, 3=Done
-            return await _todoItems.Find(todo => todo.UserId == UserId && todo.Status == status).ToListAsync();
+            var filter = Builders<TodoItem>.Filter.And(
+                Builders<TodoItem>.Filter.Eq(todo => todo.UserId, UserId),
+                Builders<TodoItem>.Filter.Eq(todo => todo.Status, status)
+            );
+            var result = await _todoItems.Find(filter).ToListAsync();
+            return result;
         }
 
         public async Task AddTask(TodoItem item)
         {
+            Console.WriteLine($"Adding task with status: {item.Status}");
             await _todoItems.InsertOneAsync(item);
         }
         public async Task UpdateTask(string id, TodoItem item)
@@ -267,6 +273,11 @@ namespace ToDoList_FS
                 .Find(x => x.UserId == userId)
                 .Sort(Builders<Holiday>.Sort.Descending(x => x.CreatedDate))
                 .ToListAsync();
+        }
+
+        public async Task<TodoItem> GetTaskById(string id)
+        {
+            return await _todoItems.Find(todo => todo.Id == id).FirstOrDefaultAsync();
         }
     }
 }
