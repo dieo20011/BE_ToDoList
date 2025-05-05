@@ -44,9 +44,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy",
        policy => policy
-           .SetIsOriginAllowed(_ => true) // Allow any origin
+           .WithOrigins(
+               "https://todolist-angular-tau.vercel.app",
+               "https://todolist-angular-tau-vercel.app",
+               "https://todolist-angular.vercel.app",
+               "http://localhost:4200"
+           )
            .AllowAnyHeader()
            .AllowAnyMethod()
+           .WithExposedHeaders("Content-Disposition")
            .AllowCredentials());
 });
 
@@ -78,12 +84,12 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+// Use CORS first before any other middleware
+app.UseCors("CorsPolicy");
+
 // Always enable Swagger in all environments for this project
 app.UseSwagger();
 app.UseSwaggerUI();
-
-// Use the updated CORS policy - moved to the very beginning of middleware pipeline
-app.UseCors("CorsPolicy");
 
 // In production, Render handles HTTPS, so we don't need to redirect
 if (app.Environment.IsDevelopment())
