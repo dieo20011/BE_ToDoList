@@ -15,18 +15,6 @@ namespace ToDoList_FS.Controllers
             _mongoDBService = mongoDBService;
         }
 
-        /// <summary>
-        /// Get todo list for a user with optional status filter
-        /// </summary>
-        /// <param name="id">User ID</param>
-        /// <param name="status">Optional filter: 0=All, 1=Pending, 2=InProgress, 3=Done</param>
-        /// <returns>List of todo items</returns>
-        /// <example>
-        /// GET /api/todo/get/123           - Get all tasks for user 123
-        /// GET /api/todo/get/123?status=1  - Get only pending tasks
-        /// GET /api/todo/get/123?status=2  - Get only in-progress tasks
-        /// GET /api/todo/get/123?status=3  - Get only completed tasks
-        /// </example>
         [HttpGet("get/{id}")]
         public async Task<IActionResult> GetTodoList(string id, [FromQuery] int? status)
         {
@@ -50,10 +38,6 @@ namespace ToDoList_FS.Controllers
             return SuccessResult("Cập nhật task thành công");
         }
 
-        /// <summary>
-        /// Delete a todo item
-        /// </summary>
-        /// <param name="id">Todo item ID to delete</param>
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteTask(string id)
         {
