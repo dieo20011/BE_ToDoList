@@ -17,6 +17,8 @@ namespace ToDoList_FS.Model
         public string Password { get; set; }
         [BsonElement("isAdmin")]
         public bool IsAdmin { get; set; }
+        [BsonElement("email")]
+        public string Email { get; set; }
     }
 
     public class UserLoginRequest
@@ -38,13 +40,17 @@ namespace ToDoList_FS.Model
 
         [Required(ErrorMessage = "Username is required.")]
         public string UserName { get; set; }
+
+        [Required(ErrorMessage = "Email is required.")]
+        public string Email { get; set; }
     }
 
     public class UserUpdateRequest
     {
         public string FullName { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
-    }
+        public string Email { get; set; } = string.Empty;
+
 
 
     public class PasswordUpdateRequest
