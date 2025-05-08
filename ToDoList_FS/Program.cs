@@ -6,19 +6,18 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// **Cấu hình Kestrel trước khi build**
+// Configure Kestrel to use the PORT environment variable (for Render)
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    // Use port from environment variable (for Render)
     var port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "8080");
-    serverOptions.ListenAnyIP(port); // HTTP for Render
+    serverOptions.ListenAnyIP(port);
     
     // Only configure HTTPS on development environment
     if (builder.Environment.IsDevelopment())
     {
         serverOptions.ListenAnyIP(7291, listenOptions =>
         {
-            listenOptions.UseHttps(); // HTTPS
+            listenOptions.UseHttps();
         });
     }
 });
@@ -28,12 +27,21 @@ builder.Services.AddControllers();
 
 // Get MongoDB connection string from environment or fallback to hardcoded value
 var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING") ?? 
-    "mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority&ssl=true";
+    "mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority";
 
 builder.Services.AddSingleton<IMongoClient>(s =>
 {
     MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(mongoConnectionString));
-    settings.SslSettings = new SslSettings { EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 };
+    
+    // Configure SSL/TLS settings correctly
+    settings.SslSettings = new SslSettings 
+    { 
+        EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 
+    };
+    
+    // Set server connection timeout
+    settings.ServerSelectionTimeout = TimeSpan.FromSeconds(5);
+    
     return new MongoClient(settings);
 });
 

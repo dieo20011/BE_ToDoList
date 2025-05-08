@@ -59,3 +59,4 @@ namespace ToDoList_FS.Model
         public string NewPassword { get; set; } = string.Empty;
     }
 }
+}
