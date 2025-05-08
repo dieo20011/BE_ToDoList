@@ -10,16 +10,14 @@ services:
       - key: PORT
         value: 8080
       - key: MONGO_CONNECTION_STRING
-        value: mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority&ssl=true
-      - key: MONGO_TLS
-        value: true
-      - key: MONGO_SSL
-        value: true
+        value: mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority
       - key: JWT_SECRET
         value: banhxeo0210_abc1234567890abcdef
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-    healthCheckPath: /swagger
+    healthCheckPath: /health
+    buildCommand: docker build -t todolist-api -f ToDoList_FS/Dockerfile .
+    startCommand: docker run -p 8080:8080 -e PORT=8080 todolist-api
     # Optional: Add the following if your application needs to define custom domains
     # domains:
     #  - api.yourdomain.com 

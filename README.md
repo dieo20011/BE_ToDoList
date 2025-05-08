@@ -18,20 +18,26 @@ The `PORT` variable is automatically set by Render.
 
 ### 2. Fix Deployment Issues
 
-If you're experiencing deployment issues, check the following:
+The following issues have been fixed in this repository:
 
-1. **MongoDB Driver Version**: Make sure you're using a stable version (2.22.0 is recommended).
-2. **SSL Configuration**: Ensure SSL is properly configured for MongoDB connections.
-3. **Docker Configuration**: Verify the Dockerfile has the correct setup for Render.
-4. **Kestrel Configuration**: Make sure Kestrel is configured to listen on the correct port (from environment).
+1. **MongoDB Driver Version**: Updated to a stable version (2.22.0)
+2. **SSL Configuration**: Properly configured SSL for MongoDB connections
+3. **Docker Configuration**: Updated the Dockerfile with proper SSL certificate handling
+4. **Kestrel Configuration**: Configured to listen on the correct port (from environment variable)
+5. **Health Check Endpoint**: Added `/health` and `/ping` endpoints for monitoring
+6. **Fixed Code Issues**: Resolved all build errors and missing model classes
 
-You can run the included fix script to check for common issues:
+### 3. Deployment with render.yaml
 
-```bash
-./fixDeployment.sh
-```
+The repository includes a `render.yaml` file for easy deployment. Simply:
 
-### 3. Manual Deployment Steps
+1. Fork this repository
+2. Update the `repo` URL in `render.yaml` to point to your forked repository
+3. Connect your GitHub account to Render
+4. Create a new blueprint from your repository
+5. Click "Apply Blueprint"
+
+### 4. Manual Deployment Steps
 
 If you prefer to deploy manually:
 
@@ -40,10 +46,10 @@ If you prefer to deploy manually:
    ```
    docker build -t todolist-api -f ToDoList_FS/Dockerfile .
    ```
-3. Set the required environment variables
-4. Deploy to Render using the web service setup
+3. Set the required environment variables in Render
+4. Deploy as a Web Service on Render, pointing to your repository
 
-### 4. Troubleshooting
+### 5. Troubleshooting
 
 If you encounter "exit status 1" errors in Render:
 - Check the build logs for specific errors
@@ -60,4 +66,4 @@ To run the application locally:
 3. Run `dotnet build`
 4. Run `dotnet run --project ToDoList_FS`
 
-The API will be available at `http://localhost:8080`. 
+The API will be available at `http://localhost:8080` with Swagger UI at `http://localhost:8080/swagger` 

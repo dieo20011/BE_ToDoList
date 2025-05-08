@@ -3,6 +3,7 @@ using System.Text;
 using ToDoList_FS;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,8 +23,20 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     }
 });
 
+// Configure HTTPS redirection to use a specific port in development
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHttpsRedirection(options =>
+    {
+        options.HttpsPort = 7291;
+    });
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Add health checks
+builder.Services.AddHealthChecks();
 
 // Get MongoDB connection string from environment or fallback to hardcoded value
 var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING") ?? 
@@ -99,6 +112,19 @@ app.UseCors("CorsPolicy");
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// Add health check endpoint
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync($"{{\"status\": \"{report.Status}\", \"version\": \"1.0.0\"}}");
+    }
+});
+
+// Simple ping endpoint for Render health checks
+app.MapGet("/ping", () => "pong");
+
 // In production, Render handles HTTPS, so we don't need to redirect
 if (app.Environment.IsDevelopment())
 {
@@ -109,12 +135,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-// Only set explicit URLs in development
-if (app.Environment.IsDevelopment())
-{
-    app.Urls.Add("http://localhost:5148");
-    // app.Urls.Add("https://localhost:7291"); // Bỏ comment nếu cần HTTPS
-}
 
 app.Run();

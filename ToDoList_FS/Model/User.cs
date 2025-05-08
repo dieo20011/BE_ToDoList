@@ -1,4 +1,4 @@
-﻿using MongoDB.Bson;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
 
@@ -9,14 +9,19 @@ namespace ToDoList_FS.Model
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
+        
         [BsonElement("username")]
         public string UserName { get; set; }
+        
         [BsonElement("fullname")]
         public string? FullName { get; set; }
+        
         [BsonElement("password")]
         public string Password { get; set; }
+        
         [BsonElement("isAdmin")]
         public bool IsAdmin { get; set; }
+        
         [BsonElement("email")]
         public string Email { get; set; }
     }
@@ -50,13 +55,11 @@ namespace ToDoList_FS.Model
         public string FullName { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-
-
+    }
 
     public class PasswordUpdateRequest
     {
         public string OldPassword { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
     }
-}
-}
+} 

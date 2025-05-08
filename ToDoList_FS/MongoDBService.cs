@@ -60,7 +60,7 @@ namespace ToDoList_FS
             var result = await _users.UpdateOneAsync(u => u.Id == id, update);
             return result.ModifiedCount > 0;
         }
-        public async Task<string> RegisterUser(string username, string password, string fullname)
+        public async Task<string> RegisterUser(string username, string password, string fullname, string email)
         {
             var existingUser = await _users.Find(u => u.UserName == username).FirstOrDefaultAsync();
             if (existingUser != null)
@@ -69,7 +69,12 @@ namespace ToDoList_FS
             }
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
-            var user = new User { UserName = username, Password = hashedPassword, FullName = fullname };
+            var user = new User { 
+                UserName = username, 
+                Password = hashedPassword, 
+                FullName = fullname,
+                Email = email
+            };
             await _users.InsertOneAsync(user);
 
             return GenerateJwtToken(user);
