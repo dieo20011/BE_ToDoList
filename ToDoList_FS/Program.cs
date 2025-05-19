@@ -108,6 +108,9 @@ var app = builder.Build();
 // Use CORS first before any other middleware
 app.UseCors("CorsPolicy");
 
+// Add this line to serve static files (for Swagger UI)
+app.UseStaticFiles();
+
 // Always enable Swagger in all environments for this project
 app.UseSwagger();
 app.UseSwaggerUI();
