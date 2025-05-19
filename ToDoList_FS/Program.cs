@@ -66,15 +66,16 @@ builder.Services.AddCors(options =>
     options.AddPolicy("CorsPolicy",
        policy => policy
            .WithOrigins(
+               "http://localhost:4200",
                "https://todolist-angular-tau.vercel.app",
                "https://todolist-angular-tau-vercel.app",
-               "https://todolist-angular.vercel.app",
-               "http://localhost:4200"
+               "https://todolist-angular.vercel.app"
            )
            .AllowAnyHeader()
            .AllowAnyMethod()
+           .AllowCredentials()
            .WithExposedHeaders("Content-Disposition")
-           .AllowCredentials());
+       );
 });
 
 // Swagger
