@@ -42,20 +42,27 @@ builder.Services.AddHealthChecks();
 var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING") ?? 
     "mongodb+srv://duyentran2491991:iPQTfs3rbS3Q1CBk@todolist.ineop.mongodb.net/?retryWrites=true&w=majority";
 
+// Remove any ssl/tlsAllowInvalidCertificates from connection string if present
+mongoConnectionString = mongoConnectionString.Replace("&ssl=true", "").Replace("ssl=true", "").Replace("&tlsAllowInvalidCertificates=true", "").Replace("tlsAllowInvalidCertificates=true", "");
+
 builder.Services.AddSingleton<IMongoClient>(s =>
 {
-    MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(mongoConnectionString));
-    
-    // Configure SSL/TLS settings correctly
-    settings.SslSettings = new SslSettings 
-    { 
-        EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 
-    };
-    
-    // Set server connection timeout
-    settings.ServerSelectionTimeout = TimeSpan.FromSeconds(5);
-    
-    return new MongoClient(settings);
+    try
+    {
+        MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(mongoConnectionString));
+        // Always enforce TLS 1.2
+        settings.SslSettings = new SslSettings 
+        { 
+            EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 
+        };
+        settings.ServerSelectionTimeout = TimeSpan.FromSeconds(5);
+        return new MongoClient(settings);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"MongoDB connection error: {ex}");
+        throw;
+    }
 });
 
 builder.Services.AddScoped<MongoDBService>();
