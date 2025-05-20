@@ -126,12 +126,21 @@ namespace ToDoList_FS
             return originalKey;
         }
         //Task
-        public async Task<List<TodoItem>> GetTodoList(string UserId, int status = 0)
+        public async Task<List<TodoItemResponse>> GetTodoList(string UserId, int status = 0)
         {
             // If status is 0 (All), return all tasks for the user
             if (status == (int)Model.TaskStatus.All)
             {
-                return await _todoItems.Find(todo => todo.UserId == UserId).ToListAsync();
+                return await _todoItems.Find(todo => todo.UserId == UserId).ToListAsync()
+                    .ContinueWith(task => task.Result.Select(x => new TodoItemResponse {
+                        Id = x.Id,
+                        Title = x.Title,
+                        Description = x.Description,
+                        Status = x.Status,
+                        FromDate = x.FromDate,
+                        ToDate = x.ToDate,
+                        UserId = x.UserId
+                    }).ToList());
             }
             
             // Otherwise, filter by both userId and status
@@ -141,18 +150,36 @@ namespace ToDoList_FS
                 Builders<TodoItem>.Filter.Eq(todo => todo.Status, status)
             );
             var result = await _todoItems.Find(filter).ToListAsync();
-            return result;
+            // Map sang TodoItemResponse
+            return result.Select(x => new TodoItemResponse {
+                Id = x.Id,
+                Title = x.Title,
+                Description = x.Description,
+                Status = x.Status,
+                FromDate = x.FromDate,
+                ToDate = x.ToDate,
+                UserId = x.UserId
+            }).ToList();
         }
 
-        public async Task AddTask(TodoItem item)
+        public async Task AddTask(TodoItemRequest item)
         {
-            Console.WriteLine($"Adding task with status: {item.Status}");
-            await _todoItems.InsertOneAsync(item);
+            // Map sang TodoItem
+            var todo = new TodoItemResponse {
+                Id = ObjectId.GenerateNewId().ToString(),
+                Title = item.Title,
+                Description = item.Description,
+                Status = item.Status,
+                FromDate = item.FromDate,
+                ToDate = item.ToDate,
+                UserId = item.UserId
+            };
+            await _todoItems.InsertOneAsync(todo);
         }
-        public async Task UpdateTask(string id, TodoItem item)
+        public async Task UpdateTask(string id, TodoItemRequest item)
         {
-            var filter = Builders<TodoItem>.Filter.Eq(todo => todo.Id, id);
-            var request = Builders<TodoItem>.Update
+            var filter = Builders<TodoItemResponse>.Filter.Eq(todo => todo.Id, id);
+            var request = Builders<TodoItemResponse>.Update
                 .Set(todo => todo.Title, item.Title)
                 .Set(todo => todo.Status, item.Status)
                 .Set(todo => todo.Description, item.Description)
@@ -162,7 +189,7 @@ namespace ToDoList_FS
         }
         public async Task DeleteTask(string id)
         {
-           var filter = Builders<TodoItem>.Filter.Eq(todo => todo.Id, id);
+           var filter = Builders<TodoItemResponse>.Filter.Eq(todo => todo.Id, id);
            await _todoItems.DeleteOneAsync(filter);
         }
 
@@ -281,9 +308,10 @@ namespace ToDoList_FS
                 .ToListAsync();
         }
 
-        public async Task<TodoItem> GetTaskById(string id)
+        public async Task<TodoItemResponse> GetTaskById(string id)
         {
-            return await _todoItems.Find(todo => todo.Id == id).FirstOrDefaultAsync();
+            var task = await _todoItems.Find(todo => todo.Id == id).FirstOrDefaultAsync();
+            return task;
         }
     }
 }

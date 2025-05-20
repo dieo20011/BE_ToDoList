@@ -30,7 +30,7 @@ namespace ToDoList_FS.Controllers
         }
 
         [HttpPost("add")]
-        public async Task<IActionResult> AddTask([FromBody] TodoItem todo)
+        public async Task<IActionResult> AddTask([FromBody] TodoItemRequest todo)
         {
             if (!ModelState.IsValid)
             {
@@ -47,7 +47,7 @@ namespace ToDoList_FS.Controllers
         }
 
         [HttpPut("update/{id}")]
-        public async Task<IActionResult> UpdateTask(string id, [FromBody] TodoItem todo)
+        public async Task<IActionResult> UpdateTask(string id, [FromBody] TodoItemRequest todo)
         {
             if (!ModelState.IsValid)
             {

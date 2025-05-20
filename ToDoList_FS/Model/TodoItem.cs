@@ -12,29 +12,38 @@ namespace ToDoList_FS.Model
         Done = 2        // Task is completed
     }
 
-    public class TodoItem
+    // Model cho GET/Response (không cần [Required])
+    public class TodoItemResponse
     {
         [BsonId]
         public string? Id { get; set; }
-
         [BsonElement("title")]
-        [Required]
         public string Title { get; set; }
-
         [BsonElement("description")]
-        [Required]
         public string Description { get; set; }
         [BsonElement("status")]
-        [Required]
         public int Status { get; set; }
-
         [BsonElement("fromDate")]
-        [Required]
         public string FromDate { get; set; }
         [BsonElement("toDate")]
-        [Required]
         public string ToDate { get; set; }
         [BsonElement("userId")]
+        public string UserId { get; set; }
+    }
+
+    // Model cho POST/PUT (có [Required])
+    public class TodoItemRequest
+    {
+        [Required]
+        public string Title { get; set; }
+        [Required]
+        public string Description { get; set; }
+        [Required]
+        public int Status { get; set; }
+        [Required]
+        public string FromDate { get; set; }
+        [Required]
+        public string ToDate { get; set; }
         [Required]
         public string UserId { get; set; }
     }
