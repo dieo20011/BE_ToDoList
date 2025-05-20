@@ -32,6 +32,11 @@ namespace ToDoList_FS.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> AddTask([FromBody] TodoItem todo)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                return BadRequest(new { message = "Invalid data", errors });
+            }
             // Ensure status is one of the valid values
             if (todo.Status < 1 || todo.Status > 3)
             {
@@ -44,6 +49,11 @@ namespace ToDoList_FS.Controllers
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateTask(string id, [FromBody] TodoItem todo)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                return BadRequest(new { message = "Invalid data", errors });
+            }
             // Ensure status is one of the valid values
             if (todo.Status < 1 || todo.Status > 3)
             {

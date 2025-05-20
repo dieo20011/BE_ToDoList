@@ -15,22 +15,27 @@ namespace ToDoList_FS.Model
     public class TodoItem
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
         [BsonElement("title")]
+        [Required]
         public string Title { get; set; }
 
         [BsonElement("description")]
+        [Required]
         public string Description { get; set; }
         [BsonElement("status")]
+        [Required]
         public int Status { get; set; }
 
         [BsonElement("fromDate")]
+        [Required]
         public string FromDate { get; set; }
         [BsonElement("toDate")]
+        [Required]
         public string ToDate { get; set; }
         [BsonElement("userId")]
+        [Required]
         public string UserId { get; set; }
     }
 }

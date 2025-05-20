@@ -28,9 +28,13 @@ namespace ToDoList_FS.Model {
 public class HolidayDTO
 {
     public string? Id { get; set; }
+    [Required]
     public string Name { get; set; } = null!;
+    [Required]
     public DateTime FromDate { get; set; }
+    [Required]
     public DateTime ToDate { get; set; }
+    [Required]
     public string Description { get; set; } = null!;
     public bool IsAnnualHoliday { get; set; }
     public string UserId { get; set; } = null!;

@@ -45,6 +45,11 @@ namespace ToDoList_FS.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> AddHoliday([FromBody] HolidayDTO holidayDto)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                return BadRequest(new { message = "Invalid data", errors });
+            }
             if (string.IsNullOrEmpty(holidayDto.UserId))
                 return ErrorResult("UserId is required");
 
@@ -55,6 +60,11 @@ namespace ToDoList_FS.Controllers
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateHoliday(string id, [FromBody] HolidayDTO holidayDto)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                return BadRequest(new { message = "Invalid data", errors });
+            }
             if (string.IsNullOrEmpty(holidayDto.UserId))
                 return ErrorResult("UserId is required");
 
