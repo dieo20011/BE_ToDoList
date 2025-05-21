@@ -11,7 +11,7 @@ namespace ToDoList_FS
 {
     public class MongoDBService 
     {
-        private readonly IMongoCollection<TodoItem> _todoItems;
+        private readonly IMongoCollection<TodoItemResponse> _todoItems;
         private readonly IMongoCollection<User> _users;
         private readonly string _jwtSecret = "banhxeo0210_abc1234567890abcdef";  // 128 bits (16 bytes)
         private readonly IMongoCollection<Holiday> _holidayCollection;
@@ -19,7 +19,7 @@ namespace ToDoList_FS
         public MongoDBService(IMongoClient mongoClient, IConfiguration configuration)
         {
             var database = mongoClient.GetDatabase("Todolist_Paging");
-            _todoItems = database.GetCollection<TodoItem>("Paging");
+            _todoItems = database.GetCollection<TodoItemResponse>("Paging");
             _users = database.GetCollection<User>("Users");
             _holidayCollection = database.GetCollection<Holiday>("Holiday");
         }
@@ -142,7 +142,6 @@ namespace ToDoList_FS
                     UserId = x.UserId
                 }).ToList();
             }
-
             var filter = Builders<TodoItem>.Filter.And(
                 Builders<TodoItem>.Filter.Eq(todo => todo.UserId, userId),
                 Builders<TodoItem>.Filter.Eq(todo => todo.Status, status)
@@ -165,13 +164,11 @@ namespace ToDoList_FS
             if (item == null ||
                 string.IsNullOrWhiteSpace(item.Title) ||
                 string.IsNullOrWhiteSpace(item.UserId) ||
-                item.FromDate == default ||
-                item.ToDate == default)
+                string.IsNullOrWhiteSpace(item.FromDate) ||
+                string.IsNullOrWhiteSpace(item.ToDate))
             {
-                // You can throw an exception or return false
                 return false;
             }
-
             var todo = new TodoItem
             {
                 Id = ObjectId.GenerateNewId().ToString(),
@@ -191,12 +188,11 @@ namespace ToDoList_FS
                 item == null ||
                 string.IsNullOrWhiteSpace(item.Title) ||
                 string.IsNullOrWhiteSpace(item.UserId) ||
-                item.FromDate == default ||
-                item.ToDate == default)
+                string.IsNullOrWhiteSpace(item.FromDate) ||
+                string.IsNullOrWhiteSpace(item.ToDate))
             {
                 return false;
             }
-
             var filter = Builders<TodoItem>.Filter.Eq(todo => todo.Id, id);
             var request = Builders<TodoItem>.Update
                 .Set(todo => todo.Title, item.Title)
@@ -209,8 +205,8 @@ namespace ToDoList_FS
         }
         public async Task DeleteTask(string id)
         {
-           var filter = Builders<TodoItemResponse>.Filter.Eq(todo => todo.Id, id);
-           await _todoItems.DeleteOneAsync(filter);
+            var filter = Builders<TodoItem>.Filter.Eq(todo => todo.Id, id);
+            await _todoItems.DeleteOneAsync(filter);
         }
 
         public async Task<HolidayPaginatedResult> GetHolidaysAsync(string userId, HolidayQueryParams queryParams)
@@ -353,7 +349,17 @@ namespace ToDoList_FS
         public async Task<TodoItemResponse> GetTaskById(string id)
         {
             var task = await _todoItems.Find(todo => todo.Id == id).FirstOrDefaultAsync();
-            return task;
+            if (task == null) return null;
+            return new TodoItemResponse
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                Status = task.Status,
+                FromDate = task.FromDate,
+                ToDate = task.ToDate,
+                UserId = task.UserId
+            };
         }
     }
 }
