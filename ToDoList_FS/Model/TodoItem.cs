@@ -12,6 +12,32 @@ namespace ToDoList_FS.Model
         Done = 2        // Task is completed
     }
 
+    // Model gốc cho MongoDB
+    public class TodoItem
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
+
+        [BsonElement("title")]
+        public string Title { get; set; }
+
+        [BsonElement("description")]
+        public string Description { get; set; }
+
+        [BsonElement("status")]
+        public int Status { get; set; }
+
+        [BsonElement("fromDate")]
+        public string FromDate { get; set; }
+
+        [BsonElement("toDate")]
+        public string ToDate { get; set; }
+
+        [BsonElement("userId")]
+        public string UserId { get; set; }
+    }
+
     // Model cho GET/Response (không cần [Required])
     public class TodoItemResponse
     {
