@@ -11,7 +11,7 @@ namespace ToDoList_FS
 {
     public class MongoDBService 
     {
-        private readonly IMongoCollection<TodoItemResponse> _todoItems;
+        private readonly IMongoCollection<TodoItem> _todoItems;
         private readonly IMongoCollection<User> _users;
         private readonly string _jwtSecret = "banhxeo0210_abc1234567890abcdef";  // 128 bits (16 bytes)
         private readonly IMongoCollection<Holiday> _holidayCollection;
@@ -19,7 +19,7 @@ namespace ToDoList_FS
         public MongoDBService(IMongoClient mongoClient, IConfiguration configuration)
         {
             var database = mongoClient.GetDatabase("Todolist_Paging");
-            _todoItems = database.GetCollection<TodoItemResponse>("Paging");
+            _todoItems = database.GetCollection<TodoItem>("Paging");
             _users = database.GetCollection<User>("Users");
             _holidayCollection = database.GetCollection<Holiday>("Holiday");
         }
