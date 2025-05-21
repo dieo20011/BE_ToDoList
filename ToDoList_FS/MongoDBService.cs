@@ -126,32 +126,30 @@ namespace ToDoList_FS
             return originalKey;
         }
         //Task
-        public async Task<List<TodoItemResponse>> GetTodoList(string UserId, int status = 0)
+        public async Task<List<TodoItemResponse>> GetTodoList(string userId, int status = 0)
         {
-            // If status is 0 (All), return all tasks for the user
             if (status == (int)Model.TaskStatus.All)
             {
-                return await _todoItems.Find(todo => todo.UserId == UserId).ToListAsync()
-                    .ContinueWith(task => task.Result.Select(x => new TodoItemResponse {
-                        Id = x.Id,
-                        Title = x.Title,
-                        Description = x.Description,
-                        Status = x.Status,
-                        FromDate = x.FromDate,
-                        ToDate = x.ToDate,
-                        UserId = x.UserId
-                    }).ToList());
+                var items = await _todoItems.Find(todo => todo.UserId == userId).ToListAsync();
+                return items.Select(x => new TodoItemResponse
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Description = x.Description,
+                    Status = x.Status,
+                    FromDate = x.FromDate,
+                    ToDate = x.ToDate,
+                    UserId = x.UserId
+                }).ToList();
             }
-            
-            // Otherwise, filter by both userId and status
-            // Status: 1=Pending, 2=InProgress, 3=Done
+
             var filter = Builders<TodoItem>.Filter.And(
-                Builders<TodoItem>.Filter.Eq(todo => todo.UserId, UserId),
+                Builders<TodoItem>.Filter.Eq(todo => todo.UserId, userId),
                 Builders<TodoItem>.Filter.Eq(todo => todo.Status, status)
             );
             var result = await _todoItems.Find(filter).ToListAsync();
-            // Map sang TodoItemResponse
-            return result.Select(x => new TodoItemResponse {
+            return result.Select(x => new TodoItemResponse
+            {
                 Id = x.Id,
                 Title = x.Title,
                 Description = x.Description,
