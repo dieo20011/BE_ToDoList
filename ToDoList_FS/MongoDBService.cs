@@ -160,10 +160,20 @@ namespace ToDoList_FS
             }).ToList();
         }
 
-        public async Task AddTask(TodoItemRequest item)
+        public async Task<bool> AddTask(TodoItemRequest item)
         {
-            // Map sang TodoItem
-            var todo = new TodoItemResponse {
+            if (item == null ||
+                string.IsNullOrWhiteSpace(item.Title) ||
+                string.IsNullOrWhiteSpace(item.UserId) ||
+                item.FromDate == default ||
+                item.ToDate == default)
+            {
+                // You can throw an exception or return false
+                return false;
+            }
+
+            var todo = new TodoItem
+            {
                 Id = ObjectId.GenerateNewId().ToString(),
                 Title = item.Title,
                 Description = item.Description,
@@ -173,17 +183,29 @@ namespace ToDoList_FS
                 UserId = item.UserId
             };
             await _todoItems.InsertOneAsync(todo);
+            return true;
         }
-        public async Task UpdateTask(string id, TodoItemRequest item)
+        public async Task<bool> UpdateTask(string id, TodoItemRequest item)
         {
-            var filter = Builders<TodoItemResponse>.Filter.Eq(todo => todo.Id, id);
-            var request = Builders<TodoItemResponse>.Update
+            if (string.IsNullOrWhiteSpace(id) ||
+                item == null ||
+                string.IsNullOrWhiteSpace(item.Title) ||
+                string.IsNullOrWhiteSpace(item.UserId) ||
+                item.FromDate == default ||
+                item.ToDate == default)
+            {
+                return false;
+            }
+
+            var filter = Builders<TodoItem>.Filter.Eq(todo => todo.Id, id);
+            var request = Builders<TodoItem>.Update
                 .Set(todo => todo.Title, item.Title)
                 .Set(todo => todo.Status, item.Status)
                 .Set(todo => todo.Description, item.Description)
                 .Set(todo => todo.FromDate, item.FromDate)
                 .Set(todo => todo.ToDate, item.ToDate);
-            await _todoItems.UpdateOneAsync(filter, request);
+            var result = await _todoItems.UpdateOneAsync(filter, request);
+            return result.ModifiedCount > 0;
         }
         public async Task DeleteTask(string id)
         {
@@ -227,8 +249,18 @@ namespace ToDoList_FS
             };
         }
 
-        public async Task CreateHolidayAsync(HolidayDTO holidayDto, string userId)
+        public async Task<bool> CreateHolidayAsync(HolidayDTO holidayDto, string userId)
         {
+            if (holidayDto == null ||
+                string.IsNullOrWhiteSpace(holidayDto.Name) ||
+                string.IsNullOrWhiteSpace(userId) ||
+                holidayDto.FromDate == default ||
+                holidayDto.ToDate == default ||
+                holidayDto.FromDate > holidayDto.ToDate)
+            {
+                return false;
+            }
+
             // Nếu fromDate và toDate khác nhau, tách thành các ngày riêng biệt
             if (holidayDto.FromDate.Date != holidayDto.ToDate.Date)
             {
@@ -267,10 +299,22 @@ namespace ToDoList_FS
                 
                 await _holidayCollection.InsertOneAsync(holiday);
             }
+            return true;
         }
 
         public async Task<bool> UpdateHolidayAsync(string id, string userId, HolidayDTO holidayDto)
         {
+            if (string.IsNullOrWhiteSpace(id) ||
+                string.IsNullOrWhiteSpace(userId) ||
+                holidayDto == null ||
+                string.IsNullOrWhiteSpace(holidayDto.Name) ||
+                holidayDto.FromDate == default ||
+                holidayDto.ToDate == default ||
+                holidayDto.FromDate > holidayDto.ToDate)
+            {
+                return false;
+            }
+
             var update = Builders<Holiday>.Update
                 .Set(h => h.Name, holidayDto.Name)
                 .Set(h => h.FromDate, holidayDto.FromDate)
