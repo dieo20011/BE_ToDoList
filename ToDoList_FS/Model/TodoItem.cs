@@ -36,6 +36,9 @@ namespace ToDoList_FS.Model
 
         [BsonElement("userId")]
         public string? UserId { get; set; }
+
+        [BsonElement("isUrgent")]
+        public bool? IsUrgent { get; set; }
     }
 
     // Model cho GET/Response (không cần [Required])
@@ -55,6 +58,8 @@ namespace ToDoList_FS.Model
         public string? ToDate { get; set; }
         [BsonElement("userId")]
         public string? UserId { get; set; }
+        [BsonElement("isUrgent")]
+        public bool? IsUrgent { get; set; }
     }
 
     // Model cho POST/PUT (có [Required])
@@ -72,5 +77,8 @@ namespace ToDoList_FS.Model
         public string? ToDate { get; set; }
         [Required]
         public string? UserId { get; set; }
+
+        [Required]
+        public bool? IsUrgent { get; set; }
     }
 }

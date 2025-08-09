@@ -140,7 +140,8 @@ namespace ToDoList_FS
                     Status = x.Status,
                     FromDate = x.FromDate,
                     ToDate = x.ToDate,
-                    UserId = x.UserId
+                    UserId = x.UserId,
+                    IsUrgent = x.IsUrgent
                 }).ToList();
             }
             var filter = Builders<TodoItem>.Filter.And(
@@ -156,7 +157,8 @@ namespace ToDoList_FS
                 Status = x.Status,
                 FromDate = x.FromDate,
                 ToDate = x.ToDate,
-                UserId = x.UserId
+                UserId = x.UserId,
+                IsUrgent = x.IsUrgent
             }).ToList();
         }
 
@@ -178,7 +180,8 @@ namespace ToDoList_FS
                 Status = item.Status,
                 FromDate = item.FromDate,
                 ToDate = item.ToDate,
-                UserId = item.UserId
+                UserId = item.UserId,
+                IsUrgent = item.IsUrgent ?? false // Default to false if not provided
             };
             await _todoItems.InsertOneAsync(todo);
             return true;
@@ -200,7 +203,8 @@ namespace ToDoList_FS
                 .Set(todo => todo.Status, item.Status)
                 .Set(todo => todo.Description, item.Description)
                 .Set(todo => todo.FromDate, item.FromDate)
-                .Set(todo => todo.ToDate, item.ToDate);
+                .Set(todo => todo.ToDate, item.ToDate)
+                .Set(todo => todo.IsUrgent, item.IsUrgent);
             var result = await _todoItems.UpdateOneAsync(filter, request);
             return result.ModifiedCount > 0;
         }
@@ -359,7 +363,8 @@ namespace ToDoList_FS
                 Status = task.Status,
                 FromDate = task.FromDate,
                 ToDate = task.ToDate,
-                UserId = task.UserId
+                UserId = task.UserId,
+                IsUrgent = task.IsUrgent
             };
         }
     }
