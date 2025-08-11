@@ -278,7 +278,9 @@ namespace ToDoList_FS
                         Description = holidayDto.Description,
                         IsAnnualHoliday = holidayDto.IsAnnualHoliday,
                         UserId = userId,
-                        CreatedDate = DateTime.UtcNow
+                        CreatedDate = DateTime.UtcNow,
+                        UpdatedDate = null,
+                        IsRecurring = holidayDto.IsRecurring
                     };
                     
                     await _holidayCollection.InsertOneAsync(holiday);
@@ -295,7 +297,9 @@ namespace ToDoList_FS
                     Description = holidayDto.Description,
                     IsAnnualHoliday = holidayDto.IsAnnualHoliday,
                     UserId = userId,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.UtcNow,
+                    UpdatedDate = null,
+                    IsRecurring = holidayDto.IsRecurring
                 };
                 
                 await _holidayCollection.InsertOneAsync(holiday);
@@ -322,7 +326,9 @@ namespace ToDoList_FS
                 .Set(h => h.ToDate, holidayDto.ToDate)
                 .Set(h => h.Description, holidayDto.Description)
                 .Set(h => h.IsAnnualHoliday, holidayDto.IsAnnualHoliday)
-                .Set(h => h.UpdatedDate, DateTime.UtcNow);
+                .Set(h => h.UpdatedDate, DateTime.UtcNow)
+                .Set(h => h.IsRecurring, holidayDto.IsRecurring);
+
 
             var result = await _holidayCollection.UpdateOneAsync(
                 x => x.Id == id && x.UserId == userId,

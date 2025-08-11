@@ -25,7 +25,9 @@ namespace ToDoList_FS.Model {
     public DateTime CreatedDate { get; set; }
 
     public DateTime? UpdatedDate { get; set; }
-}
+
+    public bool IsRecurring { get; set; } = false;
+    }
 
 public class HolidayDTO
 {
@@ -40,7 +42,9 @@ public class HolidayDTO
     public string Description { get; set; } = null!;
     public bool IsAnnualHoliday { get; set; }
     public string UserId { get; set; } = null!;
-}
+
+    public bool IsRecurring { get; set; }
+    }
 
 public class HolidayQueryParams
 {
