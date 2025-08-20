@@ -67,7 +67,6 @@ namespace ToDoList_FS.Model
     {
         [Required]
         public string? Title { get; set; }
-        [Required]
         public string? Description { get; set; }
         [Required]
         public int Status { get; set; }

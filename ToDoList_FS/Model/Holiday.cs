@@ -38,7 +38,6 @@ public class HolidayDTO
     public DateTime FromDate { get; set; }
     [Required]
     public DateTime ToDate { get; set; }
-    [Required]
     public string Description { get; set; } = null!;
     public bool IsAnnualHoliday { get; set; }
     public string UserId { get; set; } = null!;
