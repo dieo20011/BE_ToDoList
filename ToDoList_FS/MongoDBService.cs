@@ -64,9 +64,14 @@ namespace ToDoList_FS
         public async Task<string> RegisterUser(string username, string password, string fullname, string email)
         {
             var existingUser = await _users.Find(u => u.UserName == username).FirstOrDefaultAsync();
+            var existingEmail = await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
             if (existingUser != null)
             {
                 return "Username đã tồn tại";
+            }
+            if (existingEmail != null)
+            {
+                return "Email đã tồn tại";
             }
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
