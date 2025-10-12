@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToDoList_FS.Model;
+using ToDoList_FS.Services;
 using System.Collections.Generic;
 
 namespace ToDoList_FS.Controllers
@@ -9,10 +10,12 @@ namespace ToDoList_FS.Controllers
     public class AuthController : BaseAPIController
     {
         public readonly MongoDBService _mongoDbSVC;
+        private readonly ICloudinaryService _cloudinaryService;
 
-        public AuthController(MongoDBService mongoDbSVC)
+        public AuthController(MongoDBService mongoDbSVC, ICloudinaryService cloudinaryService)
         {
             _mongoDbSVC = mongoDbSVC;
+            _cloudinaryService = cloudinaryService;
         }
         //Get User By Id
         [HttpGet("user/{id}")]
@@ -23,7 +26,13 @@ namespace ToDoList_FS.Controllers
             {
                 return NotFound("User not found");
             }
-            return SuccessResult(new { id = user.Id, fullname = user.FullName, username = user.UserName, email = user.Email });
+            return SuccessResult(new { 
+                id = user.Id, 
+                fullname = user.FullName, 
+                username = user.UserName, 
+                email = user.Email,
+                avatar = user.Avatar 
+            });
         }
         //Update User Information
         [HttpPut("update-info/{id}")]
@@ -47,13 +56,80 @@ namespace ToDoList_FS.Controllers
                 return ErrorResult(errorMessage);
             }
             
-            var isUpdated = await _mongoDbSVC.UpdateUser(id, request.FullName, request.UserName, request.Email);
+            var isUpdated = await _mongoDbSVC.UpdateUser(id, request.FullName, request.UserName, request.Email, request.Avatar);
             if(!isUpdated)
             {
                 return NotFound("User not found");
             }
             return SuccessResult("Update success");
         }
+
+        //Update User Information with Image Upload
+        [HttpPut("update-info-with-image/{id}")]
+        public async Task<IActionResult> UpdateUserWithImage(string id, [FromForm] UserUpdateWithImageRequest request)
+        {
+            try
+            {
+                // Kiểm tra từng trường và tạo thông báo lỗi cụ thể
+                List<string> missingFields = new List<string>();
+                
+                if(string.IsNullOrWhiteSpace(request.FullName))
+                    missingFields.Add("FullName");
+                
+                if(string.IsNullOrWhiteSpace(request.UserName))
+                    missingFields.Add("UserName");
+                
+                if(string.IsNullOrWhiteSpace(request.Email))
+                    missingFields.Add("Email");
+                
+                if(missingFields.Count > 0)
+                {
+                    string errorMessage = $"The following fields cannot be empty: {string.Join(", ", missingFields)}";
+                    return ErrorResult(errorMessage);
+                }
+
+                string avatarUrl = string.Empty;
+
+                // Xử lý upload ảnh nếu có
+                if (request.AvatarFile != null)
+                {
+                    try
+                    {
+                        avatarUrl = await _cloudinaryService.UploadImageAsync(request.AvatarFile, "user-avatars");
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        return ErrorResult($"Image upload error: {ex.Message}");
+                    }
+                    catch (Exception ex)
+                    {
+                        return ErrorResult($"Failed to upload image: {ex.Message}");
+                    }
+                }
+
+                // Cập nhật thông tin user
+                var isUpdated = await _mongoDbSVC.UpdateUser(id, request.FullName, request.UserName, request.Email, avatarUrl);
+                if(!isUpdated)
+                {
+                    // Nếu upload ảnh thành công nhưng update user thất bại, xóa ảnh đã upload
+                    if (!string.IsNullOrEmpty(avatarUrl))
+                    {
+                        await _cloudinaryService.DeleteImageAsync(avatarUrl);
+                    }
+                    return NotFound("User not found");
+                }
+
+                return SuccessResult(new { 
+                    message = "Update success", 
+                    avatarUrl = avatarUrl 
+                });
+            }
+            catch (Exception ex)
+            {
+                return ErrorResult($"An error occurred: {ex.Message}");
+            }
+        }
+
         //Update User Password
         [HttpPut("{id}/change-password")]
         public async Task<IActionResult> UpdatePassword(string id, [FromBody] PasswordUpdateRequest request)

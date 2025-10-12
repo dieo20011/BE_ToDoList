@@ -28,7 +28,7 @@ namespace ToDoList_FS
         {
             return await _users.Find(u => u.Id == UserId).FirstOrDefaultAsync();
         }
-        public async Task<bool> UpdateUser(string id, string newFullname, string newUsername, string newEmail)
+        public async Task<bool> UpdateUser(string id, string newFullname, string newUsername, string newEmail, string newAvataUrl)
         {
             var user = await _users.Find(u => u.Id == id).FirstOrDefaultAsync();
             if (user == null)
@@ -43,7 +43,9 @@ namespace ToDoList_FS
             var update = Builders<User>.Update
                 .Set(u => u.FullName, newFullname)
                 .Set(u => u.UserName, newUsername)
-                .Set(u => u.Email, newEmail);
+                .Set(u => u.Email, newEmail)
+                .Set(u => u.Avatar, newAvataUrl)
+                ;
             var result = await _users.UpdateOneAsync(u => u.Id == id, update);
             return result.ModifiedCount > 0;
         }

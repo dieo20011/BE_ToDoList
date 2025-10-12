@@ -1,6 +1,7 @@
 ﻿using MongoDB.Driver;
 using System.Text;
 using ToDoList_FS;
+using ToDoList_FS.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -66,6 +67,12 @@ builder.Services.AddSingleton<IMongoClient>(s =>
 });
 
 builder.Services.AddScoped<MongoDBService>();
+
+// Configure Cloudinary
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("Cloudinary"));
+
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 
 // Allow CORS with a more flexible policy for production
 builder.Services.AddCors(options =>

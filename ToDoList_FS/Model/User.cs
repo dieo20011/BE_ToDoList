@@ -24,6 +24,9 @@ namespace ToDoList_FS.Model
         
         [BsonElement("email")]
         public string? Email { get; set; }
+
+        [BsonElement("avatar")]
+        public string? Avatar { get; set; }
     }
 
     public class UserLoginRequest
@@ -55,6 +58,15 @@ namespace ToDoList_FS.Model
         public string FullName { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public string Avatar { get; set; } = string.Empty;
+    }
+
+    public class UserUpdateWithImageRequest
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public IFormFile? AvatarFile { get; set; }
     }
 
     public class PasswordUpdateRequest
