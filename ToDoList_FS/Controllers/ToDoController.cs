@@ -42,8 +42,14 @@ namespace ToDoList_FS.Controllers
             {
                 todo.Status = (int)Model.TaskStatus.Pending; // Default to Pending if invalid
             }
-            await _mongoDBService.AddTask(todo);
-            return SuccessResult("Thêm task thành công");
+            var result = await _mongoDBService.AddTask(todo);
+            
+            if (result.IsSuccess)
+            {
+                return SuccessResult(result.Message);
+            }
+            
+            return ErrorResult(result.Message);
         }
 
         [HttpPut("update/{id}")]
@@ -59,8 +65,14 @@ namespace ToDoList_FS.Controllers
             {
                 todo.Status = (int)Model.TaskStatus.Pending; // Default to Pending if invalid
             }
-            await _mongoDBService.UpdateTask(id, todo);
-            return SuccessResult("Cập nhật task thành công");
+            var result = await _mongoDBService.UpdateTask(id, todo);
+            
+            if (result.IsSuccess)
+            {
+                return SuccessResult(result.Message);
+            }
+            
+            return ErrorResult(result.Message);
         }
 
         [HttpDelete("delete/{id}")]

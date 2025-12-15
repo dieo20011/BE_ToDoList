@@ -169,7 +169,7 @@ namespace ToDoList_FS
             }).ToList();
         }
 
-        public async Task<bool> AddTask(TodoItemRequest item)
+        public async Task<ServiceResult> AddTask(TodoItemRequest item)
         {
             if (item == null ||
                 string.IsNullOrWhiteSpace(item.Title) ||
@@ -177,8 +177,21 @@ namespace ToDoList_FS
                 string.IsNullOrWhiteSpace(item.FromDate) ||
                 string.IsNullOrWhiteSpace(item.ToDate))
             {
-                return false;
+                return ServiceResult.Failure("Data is invalid");
             }
+
+
+            var isTitleExist = await _todoItems.Find(t => 
+            t.Title == item.Title && 
+            t.UserId == item.UserId &&
+            t.FromDate == item.FromDate
+            ).FirstOrDefaultAsync();
+
+            if (isTitleExist != null)
+            {
+                return ServiceResult.Failure("Task with this title already exists in the same day");
+            }
+
             var todo = new TodoItem
             {
                 Id = ObjectId.GenerateNewId().ToString(),
@@ -191,9 +204,9 @@ namespace ToDoList_FS
                 IsUrgent = item.IsUrgent ?? false // Default to false if not provided
             };
             await _todoItems.InsertOneAsync(todo);
-            return true;
+            return ServiceResult.Success("Add task successfully");
         }
-        public async Task<bool> UpdateTask(string id, TodoItemRequest item)
+        public async Task<ServiceResult> UpdateTask(string id, TodoItemRequest item)
         {
             if (string.IsNullOrWhiteSpace(id) ||
                 item == null ||
@@ -202,8 +215,16 @@ namespace ToDoList_FS
                 string.IsNullOrWhiteSpace(item.FromDate) ||
                 string.IsNullOrWhiteSpace(item.ToDate))
             {
-                return false;
+                return ServiceResult.Failure("Data is invalid");
             }
+
+            // Check title is exist in the same day
+            var isTitleExist = await _todoItems.Find(t => t.Title == item.Title && t.UserId == item.UserId && t.FromDate == item.FromDate && t.Id != id).FirstOrDefaultAsync();
+            if (isTitleExist != null)
+            {
+                return ServiceResult.Failure("Task with this title already exists in the same day");
+            }
+
             var filter = Builders<TodoItem>.Filter.Eq(todo => todo.Id, id);
             var request = Builders<TodoItem>.Update
                 .Set(todo => todo.Title, item.Title)
@@ -213,7 +234,13 @@ namespace ToDoList_FS
                 .Set(todo => todo.ToDate, item.ToDate)
                 .Set(todo => todo.IsUrgent, item.IsUrgent);
             var result = await _todoItems.UpdateOneAsync(filter, request);
-            return result.ModifiedCount > 0;
+            
+            if (result.ModifiedCount == 0)
+            {
+                return ServiceResult.Failure("Task not found or data is not changed");
+            }
+            
+            return ServiceResult.Success("Update task successfully");
         }
         public async Task DeleteTask(string id)
         {
