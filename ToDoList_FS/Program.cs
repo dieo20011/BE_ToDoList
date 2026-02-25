@@ -1,4 +1,4 @@
-﻿using MongoDB.Driver;
+using MongoDB.Driver;
 using System.Text;
 using ToDoList_FS;
 using ToDoList_FS.Services;
@@ -35,6 +35,7 @@ if (builder.Environment.IsDevelopment())
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // Add health checks
 builder.Services.AddHealthChecks();
@@ -153,5 +154,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ToDoList_FS.Hubs.CourtHub>("/courtHub");
 
 app.Run();
