@@ -66,6 +66,21 @@ namespace ToDoList_FS.Controllers
         /// <summary>
         /// Verify court password for access. Returns success only; does not return password.
         /// </summary>
+        /// <summary>
+        /// Delete a court by id. All players belonging to this court are also deleted (cascade).
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCourt(string? id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return ErrorResult("Invalid court ID");
+
+            var result = await _mongoDBService.DeleteCourtAsync(id);
+            if (result.IsSuccess)
+                return SuccessResult(result.Message ?? "Court deleted successfully");
+            return ErrorResult(result.Message);
+        }
+
         [HttpPost("{id}/verify-password")]
         public async Task<IActionResult> VerifyPassword(string? id, [FromBody] VerifyCourtPasswordRequest? body)
         {

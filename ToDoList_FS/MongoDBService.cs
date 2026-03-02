@@ -498,6 +498,26 @@ namespace ToDoList_FS
             return !string.IsNullOrEmpty(password) && court.Password == password;
         }
 
+        /// <summary>
+        /// Deletes a court and all players belonging to it (cascade).
+        /// </summary>
+        public async Task<ServiceResult> DeleteCourtAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return ServiceResult.Failure("Invalid court ID");
+
+            var court = await GetCourtByIdAsync(id);
+            if (court == null)
+                return ServiceResult.Failure("Court not found");
+
+            await _players.DeleteManyAsync(p => p.CourtId == id);
+            var deleteResult = await _courts.DeleteOneAsync(c => c.Id == id);
+
+            if (deleteResult.DeletedCount == 0)
+                return ServiceResult.Failure("Court could not be deleted");
+            return ServiceResult.Success("Court deleted successfully");
+        }
+
         // ---------- Players ----------
         public async Task<List<PlayerResponse>> GetPlayersByCourtIdAsync(string courtId)
         {
