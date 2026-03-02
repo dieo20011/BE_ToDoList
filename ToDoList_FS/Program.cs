@@ -83,6 +83,7 @@ builder.Services.AddCors(options =>
                "http://localhost:4200",
                "https://todolist-angular-tau.vercel.app",
                "https://todolist-angular-tau-vercel.app",
+               "https://badmintonauto.vercel.app",
                "https://todolist-angular.vercel.app"
            )
            .AllowAnyHeader()
