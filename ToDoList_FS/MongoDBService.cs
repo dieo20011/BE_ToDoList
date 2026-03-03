@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,6 +16,8 @@ namespace ToDoList_FS
         private readonly IMongoCollection<User> _users;
         private readonly string _jwtSecret = "banhxeo0210_abc1234567890abcdef";  // 128 bits (16 bytes)
         private readonly IMongoCollection<Holiday> _holidayCollection;
+        private readonly IMongoCollection<Court> _courts;
+        private readonly IMongoCollection<Player> _players;
 
         public MongoDBService(IMongoClient mongoClient, IConfiguration configuration)
         {
@@ -23,6 +25,8 @@ namespace ToDoList_FS
             _todoItems = database.GetCollection<TodoItem>("Paging");
             _users = database.GetCollection<User>("Users");
             _holidayCollection = database.GetCollection<Holiday>("Holiday");
+            _courts = database.GetCollection<Court>("Courts");
+            _players = database.GetCollection<Player>("Players");
         }
         public async Task<User?> GetUserById(string UserId)
         {
@@ -405,6 +409,221 @@ namespace ToDoList_FS
                 ToDate = task.ToDate,
                 UserId = task.UserId,
                 IsUrgent = task.IsUrgent
+            };
+        }
+
+        // ---------- Courts ----------
+        public async Task<ServiceResult> CreateCourtAsync(CreateCourtRequest request)
+        {
+            if (request == null)
+                return ServiceResult.Failure("Invalid request data");
+
+            var name = request.Name?.Trim();
+            var password = request.Password;
+
+            if (string.IsNullOrWhiteSpace(name))
+                return ServiceResult.Failure("Court name is required");
+            if (name.Length < 3)
+                return ServiceResult.Failure("Court name must be at least 3 characters");
+            if (string.IsNullOrWhiteSpace(password))
+                return ServiceResult.Failure("Password is required");
+            if (password.Length < 4)
+                return ServiceResult.Failure("Password must be at least 4 characters");
+
+            var court = new Court
+            {
+                Id = ObjectId.GenerateNewId().ToString(),
+                Name = name,
+                Password = password,
+                CreatedDate = DateTime.UtcNow
+            };
+            await _courts.InsertOneAsync(court);
+
+            return ServiceResult.Success("Court created successfully", new CourtWithPasswordResponse
+            {
+                Id = court.Id,
+                Name = court.Name,
+                Password = court.Password,
+                CreatedDate = court.CreatedDate
+            });
+        }
+
+        public async Task<List<CourtResponse>> GetCourtsAsync()
+        {
+            var courts = await _courts.Find(_ => true)
+                .SortByDescending(c => c.CreatedDate)
+                .ToListAsync();
+            return courts.Select(c => new CourtResponse
+            {
+                Id = c.Id,
+                Name = c.Name,
+                CreatedDate = c.CreatedDate
+            }).ToList();
+        }
+
+        public async Task<CourtResponse?> GetCourtByIdAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return null;
+
+            var court = await _courts.Find(c => c.Id == id).FirstOrDefaultAsync();
+            if (court == null)
+                return null;
+
+            return new CourtResponse
+            {
+                Id = court.Id,
+                Name = court.Name,
+                CreatedDate = court.CreatedDate
+            };
+        }
+
+        /// <summary>
+        /// Returns court with password for server-side verification only. Do not expose password to client in normal responses.
+        /// </summary>
+        public async Task<Court?> GetCourtByIdWithPasswordAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return null;
+            return await _courts.Find(c => c.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> VerifyCourtPasswordAsync(string courtId, string? password)
+        {
+            if (string.IsNullOrWhiteSpace(courtId))
+                return false;
+            var court = await GetCourtByIdWithPasswordAsync(courtId);
+            if (court == null)
+                return false;
+            return !string.IsNullOrEmpty(password) && court.Password == password;
+        }
+
+        /// <summary>
+        /// Deletes a court and all players belonging to it (cascade).
+        /// </summary>
+        public async Task<ServiceResult> DeleteCourtAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return ServiceResult.Failure("Invalid court ID");
+
+            var court = await GetCourtByIdAsync(id);
+            if (court == null)
+                return ServiceResult.Failure("Court not found");
+
+            await _players.DeleteManyAsync(p => p.CourtId == id);
+            var deleteResult = await _courts.DeleteOneAsync(c => c.Id == id);
+
+            if (deleteResult.DeletedCount == 0)
+                return ServiceResult.Failure("Court could not be deleted");
+            return ServiceResult.Success("Court deleted successfully");
+        }
+
+        // ---------- Players ----------
+        public async Task<List<PlayerResponse>> GetPlayersByCourtIdAsync(string courtId)
+        {
+            if (string.IsNullOrWhiteSpace(courtId))
+                return new List<PlayerResponse>();
+
+            var players = await _players.Find(p => p.CourtId == courtId)
+                .SortBy(p => p.CreatedDate)
+                .ToListAsync();
+            return players.Select(p => MapToPlayerResponse(p)).ToList();
+        }
+
+        public async Task<ServiceResult> AddPlayerAsync(CreatePlayerRequest request)
+        {
+            if (request == null)
+                return ServiceResult.Failure("Invalid request data");
+
+            var courtId = request.CourtId?.Trim();
+            var name = request.Name?.Trim();
+
+            if (string.IsNullOrWhiteSpace(courtId))
+                return ServiceResult.Failure("Court ID is required");
+            if (string.IsNullOrWhiteSpace(name))
+                return ServiceResult.Failure("Player name is required");
+            if (name.Length < 2)
+                return ServiceResult.Failure("Player name must be at least 2 characters");
+
+            var courtExists = await GetCourtByIdAsync(courtId);
+            if (courtExists == null)
+                return ServiceResult.Failure("Court not found");
+
+            var checkboxes = new bool[PlayerConstants.CheckboxCount];
+            var player = new Player
+            {
+                Id = ObjectId.GenerateNewId().ToString(),
+                CourtId = courtId,
+                Name = name,
+                Checkboxes = checkboxes,
+                IsPaid = false,
+                CreatedDate = DateTime.UtcNow
+            };
+            await _players.InsertOneAsync(player);
+
+            return ServiceResult.Success("Player added successfully", MapToPlayerResponse(player));
+        }
+
+        public async Task<ServiceResult> UpdatePlayerCheckboxAsync(UpdatePlayerCheckboxRequest request)
+        {
+            if (request == null)
+                return ServiceResult.Failure("Invalid request data");
+            if (string.IsNullOrWhiteSpace(request.PlayerId))
+                return ServiceResult.Failure("Player ID is required");
+            if (request.CheckboxIndex < 0 || request.CheckboxIndex >= PlayerConstants.CheckboxCount)
+                return ServiceResult.Failure($"CheckboxIndex must be between 0 and {PlayerConstants.CheckboxCount - 1}");
+
+            var player = await _players.Find(p => p.Id == request.PlayerId).FirstOrDefaultAsync();
+            if (player == null)
+                return ServiceResult.Failure("Player not found");
+
+            var checkboxes = player.Checkboxes ?? new bool[PlayerConstants.CheckboxCount];
+            if (checkboxes.Length != PlayerConstants.CheckboxCount)
+            {
+                var newArr = new bool[PlayerConstants.CheckboxCount];
+                Array.Copy(checkboxes, newArr, Math.Min(checkboxes.Length, PlayerConstants.CheckboxCount));
+                checkboxes = newArr;
+            }
+            checkboxes[request.CheckboxIndex] = request.IsChecked;
+
+            var update = Builders<Player>.Update.Set(p => p.Checkboxes, checkboxes);
+            var result = await _players.UpdateOneAsync(p => p.Id == request.PlayerId, update);
+            if (result.MatchedCount == 0)
+                return ServiceResult.Failure("Player not found");
+            return ServiceResult.Success("Set updated successfully");
+        }
+
+        public async Task<ServiceResult> UpdatePlayerPaymentAsync(UpdatePlayerPaymentRequest request)
+        {
+            if (request == null)
+                return ServiceResult.Failure("Invalid request data");
+            if (string.IsNullOrWhiteSpace(request.PlayerId))
+                return ServiceResult.Failure("Player ID is required");
+
+            var update = Builders<Player>.Update.Set(p => p.IsPaid, request.IsPaid);
+            var result = await _players.UpdateOneAsync(p => p.Id == request.PlayerId, update);
+            if (result.MatchedCount == 0)
+                return ServiceResult.Failure("Player not found");
+            return ServiceResult.Success("Payment status updated successfully");
+        }
+
+        private static PlayerResponse MapToPlayerResponse(Player p)
+        {
+            var checkboxes = p.Checkboxes ?? Array.Empty<bool>();
+            if (checkboxes.Length != PlayerConstants.CheckboxCount)
+            {
+                var arr = new bool[PlayerConstants.CheckboxCount];
+                Array.Copy(checkboxes, arr, Math.Min(checkboxes.Length, PlayerConstants.CheckboxCount));
+                checkboxes = arr;
+            }
+            return new PlayerResponse
+            {
+                Id = p.Id,
+                CourtId = p.CourtId,
+                Name = p.Name,
+                Checkboxes = checkboxes,
+                IsPaid = p.IsPaid,
+                CreatedDate = p.CreatedDate
             };
         }
     }

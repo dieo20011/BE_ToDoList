@@ -59,11 +59,30 @@ If you encounter "exit status 1" errors in Render:
 
 ## Local Development
 
-To run the application locally:
+To run the application locally **without Docker** (recommended if Docker is not installed or not running):
 
 1. Clone the repository
 2. Run `dotnet restore`
 3. Run `dotnet build`
 4. Run `dotnet run --project ToDoList_FS`
 
-The API will be available at `http://localhost:8080` with Swagger UI at `http://localhost:8080/swagger` 
+The API will be available at `http://localhost:8080` (or `https://localhost:7291` in Development) with Swagger UI at `/swagger`.
+
+### "ContainerBuildAndLaunch" failed – Docker settings.json not found
+
+If you see:
+
+```text
+System.IO.FileNotFoundException: Could not find file '...\AppData\Roaming\Docker\settings.json'
+```
+
+the IDE is trying to run the **Docker** launch profile but Docker Desktop is not installed or has never been started.
+
+**Fix options:**
+
+1. **Run without Docker (easiest)**  
+   - In Visual Studio / Cursor: choose the **"http"** (or **"Project"**) launch profile instead of **"Docker"**, then run/debug.  
+   - Or from terminal: `dotnet run --project ToDoList_FS` (no Docker).
+
+2. **Use Docker**  
+   - Install [Docker Desktop](https://www.docker.com/products/docker-desktop/), start it once so it creates `AppData\Roaming\Docker\settings.json`, then use the Docker profile if you want. 
