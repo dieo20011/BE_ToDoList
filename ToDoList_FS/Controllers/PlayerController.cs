@@ -64,6 +64,14 @@ namespace ToDoList_FS.Controllers
         {
             if (request == null)
                 return ErrorResult("Invalid request data");
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                return ErrorResult(errors.Count > 0 ? string.Join("; ", errors) : "Invalid request data");
+            }
             if (string.IsNullOrWhiteSpace(request.PlayerId))
                 return ErrorResult("Player ID is required");
 
@@ -81,6 +89,14 @@ namespace ToDoList_FS.Controllers
         {
             if (request == null)
                 return ErrorResult("Invalid request data");
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                return ErrorResult(errors.Count > 0 ? string.Join("; ", errors) : "Invalid request data");
+            }
             if (string.IsNullOrWhiteSpace(request.PlayerId))
                 return ErrorResult("Player ID is required");
 

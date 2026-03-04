@@ -88,6 +88,16 @@ namespace ToDoList_FS.Controllers
                 return ErrorResult("Invalid court ID");
             if (body == null)
                 return ErrorResult("Password is required");
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                return ErrorResult(errors.Count > 0 ? string.Join("; ", errors) : "Invalid request data");
+            }
+            if (string.IsNullOrWhiteSpace(body.Password))
+                return ErrorResult("Password is required");
 
             var isValid = await _mongoDBService.VerifyCourtPasswordAsync(id, body.Password);
             if (!isValid)

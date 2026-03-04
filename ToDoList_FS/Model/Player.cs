@@ -43,11 +43,13 @@ namespace ToDoList_FS.Model
     public class CreatePlayerRequest
     {
         [Required(ErrorMessage = "Court ID is required")]
+        [RegularExpression(@".*\S.*", ErrorMessage = "Court ID must not be blank or whitespace only")]
         public string CourtId { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Player name is required")]
         [MinLength(2, ErrorMessage = "Player name must be at least 2 characters")]
-        [MaxLength(100)]
+        [MaxLength(100, ErrorMessage = "Player name must not exceed 100 characters")]
+        [RegularExpression(@".*\S.*", ErrorMessage = "Player name must not be blank or whitespace only")]
         public string Name { get; set; } = string.Empty;
     }
 
@@ -57,11 +59,13 @@ namespace ToDoList_FS.Model
     public class UpdatePlayerCheckboxRequest
     {
         [Required(ErrorMessage = "Player ID is required")]
+        [RegularExpression(@".*\S.*", ErrorMessage = "Player ID must not be blank or whitespace only")]
         public string PlayerId { get; set; } = string.Empty;
 
         /// <summary>
         /// Index 0..11 for the set checkbox.
         /// </summary>
+        [Range(0, PlayerConstants.CheckboxCount - 1, ErrorMessage = "CheckboxIndex must be between 0 and 11")]
         public int CheckboxIndex { get; set; }
 
         public bool IsChecked { get; set; }
@@ -73,6 +77,7 @@ namespace ToDoList_FS.Model
     public class UpdatePlayerPaymentRequest
     {
         [Required(ErrorMessage = "Player ID is required")]
+        [RegularExpression(@".*\S.*", ErrorMessage = "Player ID must not be blank or whitespace only")]
         public string PlayerId { get; set; } = string.Empty;
 
         public bool IsPaid { get; set; }

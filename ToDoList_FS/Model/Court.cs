@@ -30,12 +30,14 @@ namespace ToDoList_FS.Model
     {
         [Required(ErrorMessage = "Court name is required")]
         [MinLength(3, ErrorMessage = "Court name must be at least 3 characters")]
-        [MaxLength(200)]
+        [MaxLength(200, ErrorMessage = "Court name must not exceed 200 characters")]
+        [RegularExpression(@".*\S.*", ErrorMessage = "Court name must not be blank or whitespace only")]
         public string Name { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Password is required")]
         [MinLength(4, ErrorMessage = "Password must be at least 4 characters")]
-        [MaxLength(100)]
+        [MaxLength(100, ErrorMessage = "Password must not exceed 100 characters")]
+        [RegularExpression(@".*\S.*", ErrorMessage = "Password must not be blank or whitespace only")]
         public string Password { get; set; } = string.Empty;
     }
 
@@ -65,7 +67,9 @@ namespace ToDoList_FS.Model
     /// </summary>
     public class VerifyCourtPasswordRequest
     {
-        [Required]
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(1, ErrorMessage = "Password must not be empty")]
+        [RegularExpression(@".*\S.*", ErrorMessage = "Password must not be blank or whitespace only")]
         public string Password { get; set; } = string.Empty;
     }
 }

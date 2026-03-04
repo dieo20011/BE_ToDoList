@@ -32,14 +32,25 @@ namespace ToDoList_FS.Model {
 public class HolidayDTO
 {
     public string? Id { get; set; }
-    [Required]
+
+    [Required(ErrorMessage = "Holiday name is required")]
+    [MinLength(2, ErrorMessage = "Holiday name must be at least 2 characters")]
+    [MaxLength(200, ErrorMessage = "Holiday name must not exceed 200 characters")]
+    [RegularExpression(@".*\S.*", ErrorMessage = "Holiday name must not be blank or whitespace only")]
     public string Name { get; set; } = null!;
-    [Required]
+
+    [Required(ErrorMessage = "FromDate is required")]
     public DateTime FromDate { get; set; }
-    [Required]
+
+    [Required(ErrorMessage = "ToDate is required")]
     public DateTime ToDate { get; set; }
-    public string Description { get; set; } = null!;
+
+    [MaxLength(500, ErrorMessage = "Description must not exceed 500 characters")]
+    public string? Description { get; set; }
+
     public bool IsAnnualHoliday { get; set; }
+
+    [Required(ErrorMessage = "UserId is required")]
     public string UserId { get; set; } = null!;
 
     public bool IsRecurring { get; set; }
