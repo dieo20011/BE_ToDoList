@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using System.Collections.Concurrent;
 using ToDoList_FS.Model;
 
 namespace ToDoList_FS.Hubs
@@ -6,6 +7,11 @@ namespace ToDoList_FS.Hubs
     public class CourtHub : Hub
     {
         private readonly MongoDBService _mongoDBService;
+
+        /// <summary>
+        /// Tracks connectionId → (courtId, displayName) for UserLeft on disconnect.
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, (string CourtId, string DisplayName)> _connectionMap = new();
 
         public CourtHub(MongoDBService mongoDBService)
         {
@@ -15,25 +21,42 @@ namespace ToDoList_FS.Hubs
         public async Task JoinCourt(string courtId, string password, string? displayName)
         {
             if (string.IsNullOrWhiteSpace(courtId))
-            {
                 throw new HubException("Court ID is required");
-            }
 
             var isValid = await _mongoDBService.VerifyCourtPasswordAsync(courtId, password);
             if (!isValid)
-            {
                 throw new HubException("Invalid password");
-            }
+
+            var name = string.IsNullOrWhiteSpace(displayName) ? Context.ConnectionId : displayName.Trim();
 
             await Groups.AddToGroupAsync(Context.ConnectionId, courtId);
-            await Clients.Caller.SendAsync("JoinedCourt", courtId, displayName ?? Context.ConnectionId);
+            _connectionMap[Context.ConnectionId] = (courtId, name);
+
+            // Notify caller
+            await Clients.Caller.SendAsync("JoinedCourt", courtId, name);
+            // Broadcast to others in the group so they can update their member list
+            await Clients.OthersInGroup(courtId).SendAsync("UserJoined", name);
         }
 
-        public Task LeaveCourt(string courtId)
+        public async Task LeaveCourt(string courtId)
         {
             if (string.IsNullOrWhiteSpace(courtId))
-                return Task.CompletedTask;
-            return Groups.RemoveFromGroupAsync(Context.ConnectionId, courtId);
+                return;
+
+            if (_connectionMap.TryRemove(Context.ConnectionId, out var info))
+                await Clients.OthersInGroup(info.CourtId).SendAsync("UserLeft", info.DisplayName);
+
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, courtId);
+        }
+
+        public override async Task OnDisconnectedAsync(Exception? exception)
+        {
+            if (_connectionMap.TryRemove(Context.ConnectionId, out var info))
+            {
+                await Clients.Group(info.CourtId).SendAsync("UserLeft", info.DisplayName);
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, info.CourtId);
+            }
+            await base.OnDisconnectedAsync(exception);
         }
 
         public Task BroadcastCourtAdded(object court)
@@ -52,12 +75,14 @@ namespace ToDoList_FS.Hubs
         {
             if (string.IsNullOrWhiteSpace(courtId))
                 return Task.CompletedTask;
+
+            _connectionMap.TryGetValue(Context.ConnectionId, out var info);
             var payload = new
             {
                 playerId,
                 checkboxIndex,
                 isChecked,
-                updatedBy = updatedBy ?? Context.ConnectionId
+                updatedBy = updatedBy ?? info.DisplayName ?? Context.ConnectionId
             };
             return Clients.Group(courtId).SendAsync("CheckboxUpdated", payload);
         }

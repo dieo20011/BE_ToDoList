@@ -18,6 +18,7 @@ namespace ToDoList_FS
         private readonly IMongoCollection<Holiday> _holidayCollection;
         private readonly IMongoCollection<Court> _courts;
         private readonly IMongoCollection<Player> _players;
+        private readonly IMongoCollection<CourtSession> _courtSessions;
 
         public MongoDBService(IMongoClient mongoClient, IConfiguration configuration)
         {
@@ -27,6 +28,7 @@ namespace ToDoList_FS
             _holidayCollection = database.GetCollection<Holiday>("Holiday");
             _courts = database.GetCollection<Court>("Courts");
             _players = database.GetCollection<Player>("Players");
+            _courtSessions = database.GetCollection<CourtSession>("CourtSessions");
         }
         public async Task<User?> GetUserById(string UserId)
         {
@@ -496,6 +498,99 @@ namespace ToDoList_FS
             if (court == null)
                 return false;
             return !string.IsNullOrEmpty(password) && court.Password == password;
+        }
+
+        // ---------- Court Sessions ----------
+        public async Task<List<CourtSessionResponse>> GetCourtSessionsAsync(string courtId)
+        {
+            if (string.IsNullOrWhiteSpace(courtId))
+                return new List<CourtSessionResponse>();
+
+            var sessions = await _courtSessions.Find(s => s.CourtId == courtId)
+                .SortByDescending(s => s.SessionDate)
+                .ToListAsync();
+
+            return sessions.Select(s => new CourtSessionResponse
+            {
+                Id = s.Id,
+                CourtId = s.CourtId,
+                SessionDate = s.SessionDate,
+                Notes = s.Notes,
+                CourtFee = s.CourtFee,
+                ShuttlecockCount = s.ShuttlecockCount,
+                ShuttlecockPrice = s.ShuttlecockPrice,
+                WaterFee = s.WaterFee,
+                MaleCount = s.MaleCount,
+                FemaleCount = s.FemaleCount,
+                MaleFixedFee = s.MaleFixedFee,
+                FemaleFixedFee = s.FemaleFixedFee,
+                MalePerPerson = s.MalePerPerson,
+                FemalePerPerson = s.FemalePerPerson,
+                TotalCost = s.TotalCost,
+                Players = s.Players,
+                CreatedDate = s.CreatedDate
+            }).ToList();
+        }
+
+        public async Task<ServiceResult> SaveCourtSessionAsync(string courtId, SaveCourtSessionRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(courtId))
+                return ServiceResult.Failure("Invalid court ID");
+            if (request == null)
+                return ServiceResult.Failure("Invalid request data");
+
+            var courtExists = await GetCourtByIdAsync(courtId);
+            if (courtExists == null)
+                return ServiceResult.Failure("Court not found");
+
+            var session = new CourtSession
+            {
+                Id = ObjectId.GenerateNewId().ToString(),
+                CourtId = courtId,
+                SessionDate = request.SessionDate == default ? DateTime.UtcNow : request.SessionDate,
+                Notes = request.Notes?.Trim() ?? string.Empty,
+                CourtFee = request.CourtFee,
+                ShuttlecockCount = request.ShuttlecockCount,
+                ShuttlecockPrice = request.ShuttlecockPrice,
+                WaterFee = request.WaterFee,
+                MaleCount = request.MaleCount,
+                FemaleCount = request.FemaleCount,
+                MaleFixedFee = request.MaleFixedFee,
+                FemaleFixedFee = request.FemaleFixedFee,
+                MalePerPerson = request.MalePerPerson,
+                FemalePerPerson = request.FemalePerPerson,
+                TotalCost = request.TotalCost,
+                Players = request.Players.Select(p => new CourtSessionPlayerSnapshot
+                {
+                    PlayerId = p.PlayerId,
+                    Name = p.Name,
+                    CheckedSets = p.CheckedSets,
+                    IsPaid = p.IsPaid
+                }).ToList(),
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _courtSessions.InsertOneAsync(session);
+            return ServiceResult.Success("Session saved successfully", new CourtSessionResponse
+            {
+                Id = session.Id,
+                CourtId = session.CourtId,
+                SessionDate = session.SessionDate,
+                Notes = session.Notes,
+                CourtFee = session.CourtFee,
+                ShuttlecockCount = session.ShuttlecockCount,
+                ShuttlecockPrice = session.ShuttlecockPrice,
+                WaterFee = session.WaterFee,
+                MaleCount = session.MaleCount,
+                FemaleCount = session.FemaleCount,
+                MaleFixedFee = session.MaleFixedFee,
+                FemaleFixedFee = session.FemaleFixedFee,
+                MalePerPerson = session.MalePerPerson,
+                FemalePerPerson = session.FemalePerPerson,
+                TotalCost = session.TotalCost,
+                Players = session.Players,
+                CreatedDate = session.CreatedDate
+            });
         }
 
         /// <summary>

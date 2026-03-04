@@ -81,6 +81,36 @@ namespace ToDoList_FS.Controllers
             return ErrorResult(result.Message);
         }
 
+        /// <summary>
+        /// Get session history for a court.
+        /// </summary>
+        [HttpGet("{id}/sessions")]
+        public async Task<IActionResult> GetCourtSessions(string? id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return ErrorResult("Invalid court ID");
+
+            var sessions = await _mongoDBService.GetCourtSessionsAsync(id);
+            return SuccessResult(sessions);
+        }
+
+        /// <summary>
+        /// Save a session (payment snapshot) for a court.
+        /// </summary>
+        [HttpPost("{id}/sessions")]
+        public async Task<IActionResult> SaveCourtSession(string? id, [FromBody] SaveCourtSessionRequest? request)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return ErrorResult("Invalid court ID");
+            if (request == null)
+                return ErrorResult("Invalid request data");
+
+            var result = await _mongoDBService.SaveCourtSessionAsync(id, request);
+            if (result.IsSuccess && result.Data != null)
+                return SuccessResult(result.Data, result.Message ?? "Session saved successfully");
+            return ErrorResult(result.Message);
+        }
+
         [HttpPost("{id}/verify-password")]
         public async Task<IActionResult> VerifyPassword(string? id, [FromBody] VerifyCourtPasswordRequest? body)
         {
