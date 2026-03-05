@@ -105,5 +105,22 @@ namespace ToDoList_FS.Controllers
                 return SuccessResult(result.Message);
             return ErrorResult(result.Message);
         }
+
+        /// <summary>
+        /// Delete a player from a court.
+        /// </summary>
+        [HttpDelete("{playerId}")]
+        public async Task<IActionResult> DeletePlayer(string? courtId, string? playerId)
+        {
+            if (string.IsNullOrWhiteSpace(courtId))
+                return ErrorResult("Invalid court ID");
+            if (string.IsNullOrWhiteSpace(playerId))
+                return ErrorResult("Player ID is required");
+
+            var result = await _mongoDBService.DeletePlayerAsync(courtId, playerId);
+            if (result.IsSuccess)
+                return SuccessResult(result.Message);
+            return ErrorResult(result.Message);
+        }
     }
 }

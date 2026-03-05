@@ -29,6 +29,13 @@ namespace ToDoList_FS.Hubs
 
             var name = string.IsNullOrWhiteSpace(displayName) ? Context.ConnectionId : displayName.Trim();
 
+            if (!string.IsNullOrWhiteSpace(displayName))
+            {
+                var isTaken = _connectionMap.Values.Any(v => v.CourtId == courtId && string.Equals(v.DisplayName, name, StringComparison.OrdinalIgnoreCase));
+                if (isTaken)
+                    throw new HubException("This display name is already taken in the court.");
+            }
+
             await Groups.AddToGroupAsync(Context.ConnectionId, courtId);
             _connectionMap[Context.ConnectionId] = (courtId, name);
 
@@ -92,6 +99,13 @@ namespace ToDoList_FS.Hubs
             if (string.IsNullOrWhiteSpace(courtId))
                 return Task.CompletedTask;
             return Clients.Group(courtId).SendAsync("PaymentUpdated", request);
+        }
+
+        public Task BroadcastPlayerDeleted(string courtId, string playerId)
+        {
+            if (string.IsNullOrWhiteSpace(courtId))
+                return Task.CompletedTask;
+            return Clients.Group(courtId).SendAsync("PlayerDeleted", playerId);
         }
     }
 }

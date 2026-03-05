@@ -706,6 +706,19 @@ namespace ToDoList_FS
             return ServiceResult.Success("Payment status updated successfully");
         }
 
+        public async Task<ServiceResult> DeletePlayerAsync(string courtId, string playerId)
+        {
+            if (string.IsNullOrWhiteSpace(courtId))
+                return ServiceResult.Failure("Invalid court ID");
+            if (string.IsNullOrWhiteSpace(playerId))
+                return ServiceResult.Failure("Invalid player ID");
+
+            var result = await _players.DeleteOneAsync(p => p.Id == playerId && p.CourtId == courtId);
+            if (result.DeletedCount > 0)
+                return ServiceResult.Success("Player deleted successfully");
+            return ServiceResult.Failure("Player not found");
+        }
+
         private static PlayerResponse MapToPlayerResponse(Player p)
         {
             var checkboxes = p.Checkboxes ?? Array.Empty<bool>();
