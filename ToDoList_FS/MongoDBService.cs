@@ -432,6 +432,10 @@ namespace ToDoList_FS
             if (password.Length < 4)
                 return ServiceResult.Failure("Password must be at least 4 characters");
 
+            var existingCourt = await _courts.Find(c => c.Name == name).FirstOrDefaultAsync();
+            if (existingCourt != null)
+                return ServiceResult.Failure("Court name already exists");
+
             var court = new Court
             {
                 Id = ObjectId.GenerateNewId().ToString(),

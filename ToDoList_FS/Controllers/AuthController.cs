@@ -185,6 +185,10 @@ namespace ToDoList_FS.Controllers
             {
                 return ErrorResult("Username already exists");
             }
+            if(result == "Email đã tồn tại")
+            {
+                return ErrorResult("Email already exists");
+            }
             return SuccessResult(result);
         }
         //Login
